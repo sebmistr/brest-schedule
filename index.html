@@ -94,8 +94,11 @@
   /* ---------- TIMELINE ---------- */
   .subhead{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:8px 0 16px}
   .timeline{position:relative}
-  .tl-row{display:grid;grid-template-columns:100px 26px 1fr;gap:10px;align-items:stretch}
-  .tl-date{font-size:12px;color:var(--muted);text-align:right;padding-top:20px;font-weight:600;line-height:1.35}
+  .tl-row{display:grid;grid-template-columns:60px 24px 1fr;gap:11px;align-items:stretch}
+  .tl-date{display:flex;flex-direction:column;align-items:flex-end;text-align:right;padding-top:16px;line-height:1.2}
+  .tl-date b{font-weight:800;font-size:13.5px;color:var(--ink);letter-spacing:-.01em}
+  .tl-date span{font-size:11px;color:var(--muted)}
+  .tl-date .yr{font-size:9.5px;opacity:.7;letter-spacing:.02em}
   .tl-axis{position:relative;display:flex;justify-content:center}
   .tl-axis::before{content:"";position:absolute;top:0;bottom:0;width:2px;background:var(--line)}
   .tl-row:first-child .tl-axis::before{top:22px}
@@ -162,8 +165,8 @@
   .tl-card.holiday{border-color:color-mix(in srgb,var(--team) 34%,var(--line))}
   .tl-card .r2{font-size:12px;color:var(--muted);margin-top:4px}
 
-  .today-marker{display:grid;grid-template-columns:100px 26px 1fr;gap:10px;align-items:center;margin:6px 0}
-  .today-marker .tl-date{color:color-mix(in srgb,var(--team) var(--tp),#000);padding-top:0;font-weight:800}
+  .today-marker{display:grid;grid-template-columns:60px 24px 1fr;gap:11px;align-items:center;margin:6px 0}
+  .today-marker .tl-date{flex-direction:row;justify-content:flex-end;color:color-mix(in srgb,var(--team) var(--tp),#000);padding-top:0;font-weight:800;font-size:12px}
   .today-marker .lab{grid-column:3;display:flex;align-items:center;gap:10px;color:color-mix(in srgb,var(--team) var(--tp),#000);font-weight:800;letter-spacing:.1em}
   .today-marker .lab::before{content:"";flex:none;width:9px;height:9px;border-radius:50%;background:var(--team);box-shadow:0 0 12px var(--team)}
   .today-marker .lab::after{content:"";flex:1;border-top:2px dashed color-mix(in srgb,var(--team) 55%,transparent)}
@@ -219,10 +222,55 @@
   }
   #printTitle{display:none;font-size:19px;font-weight:900;margin:0 0 12px}
 
-  @media(max-width:640px){
+  @media(max-width:680px){
+    /* méně místa po stranách */
+    main{padding:20px 14px 72px}
+    .bar{padding:11px 14px;gap:9px}
+    nav.tabs{padding:0 14px}
+    nav.tabs button{padding:12px 11px;font-size:13.5px}
+    .foot{padding:0 14px 40px}
+
+    /* hlavička na dva řádky: značka nahoře, výběr + přepínač pod ní */
+    .spacer{display:none}
+    .brand{flex:1 1 100%}
+    .brand .ball{width:22px;height:22px}
+    .brand>div{font-size:16px}
+    .pick{flex:1;min-width:0;gap:7px}
+    .pick label{flex:none}
+    select{flex:1;min-width:0}
+    input[type=date]{max-width:100%}
+
+    /* hero kompaktnější */
+    .hero{grid-template-columns:auto 1fr;gap:16px;padding:19px 18px;border-radius:18px}
+    .numbadge{width:60px;height:60px;border-radius:15px;font-size:30px}
+    .hero .name{font-size:21px}
+    .hero .sub{font-size:13px}
+    .hero .facts{gap:14px}
+    .next{padding:13px 15px}
+    .next .nx-main{font-size:16px}
+
+    .subhead{gap:9px}
+    .subhead>div{flex-wrap:wrap;gap:8px}
+
+    /* časová osa – užší datový sloupec, menší karty */
+    .tl-row,.today-marker{grid-template-columns:52px 18px 1fr;gap:9px}
+    .tl-date{padding-top:15px}
+    .tl-date b{font-size:12.5px}
+    .tl-date span{font-size:10px}
+    .tl-card{padding:13px 14px;border-radius:14px;margin:7px 0}
+    .mcard{padding-left:15px}
+    .ghost{font-size:54px;top:-8px;right:8px}
+    .opp{font-size:18px}
+    .mc-team{gap:9px;margin:11px 0}
+    .info{font-size:12.5px;gap:9px}
+    .rp{font-size:11.5px}
+  }
+  @media(max-width:380px){
+    main{padding:16px 10px 60px}
+    .bar,nav.tabs{padding-left:12px;padding-right:12px}
     .hero{grid-template-columns:1fr}
-    .tl-row,.today-marker{grid-template-columns:74px 20px 1fr;gap:7px}
-    .bar{gap:11px}
+    .tl-row,.today-marker{grid-template-columns:46px 16px 1fr;gap:7px}
+    .tl-date b{font-size:12px}
   }
 </style>
 </head>
@@ -377,6 +425,12 @@ function pd(iso){const[a,b,c]=iso.split('-').map(Number);return new Date(a,b-1,c
 function fmtRange(s,e){const a=pd(s),b=pd(e),y=b.getFullYear();
   if(a.getMonth()===b.getMonth()) return a.getDate()+'.–'+b.getDate()+'. '+(b.getMonth()+1)+'. '+y;
   return a.getDate()+'. '+(a.getMonth()+1)+'. – '+b.getDate()+'. '+(b.getMonth()+1)+'. '+y;}
+const MON3=['','led','úno','bře','dub','kvě','čvn','čvc','srp','zář','říj','lis','pro'];
+// kompaktní svislé datum pro osu: rozsah dnů / měsíc / rok pod sebou
+function dateCell(s,e){const a=pd(s),b=pd(e),y=b.getFullYear(),m1=a.getMonth()+1,m2=b.getMonth()+1;
+  const top = m1===m2 ? `${a.getDate()}.–${b.getDate()}.` : `${a.getDate()}. ${m1}.`;
+  const mid = m1===m2 ? MON3[m1] : `– ${b.getDate()}. ${m2}.`;
+  return `<b>${top}</b><span>${mid}</span><span class="yr">${y}</span>`;}
 function today0(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
 function toISO(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 
@@ -470,7 +524,7 @@ function renderTimeline(){
       const day=m.home?t.day:opp.day, time=m.home?t.time:opp.time;
       const half=w.round<=9?'I. polovina':'II. polovina · odveta';
       html+=`<div class="tl-row ${isCur?'cur':''}" style="--oc:${oc}">
-        <div class="tl-date">${fmtRange(w.s,w.e)}</div>
+        <div class="tl-date">${dateCell(w.s,w.e)}</div>
         <div class="tl-axis"><div class="dot"></div></div>
         <div class="tl-card mcard ${curCls} ${isPlayed(w.round)?'done':''}">
           <div class="ghost">${w.round}</div>
@@ -496,7 +550,7 @@ function renderTimeline(){
     } else {
       const isHol=w.type==='holiday';
       html+=`<div class="tl-row">
-        <div class="tl-date">${fmtRange(w.s,w.e)}</div>
+        <div class="tl-date">${dateCell(w.s,w.e)}</div>
         <div class="tl-axis"><div class="dot ${isHol?'holiday':'nt'}"></div></div>
         <div class="tl-card slim ${isHol?'holiday':'freewk'} ${curCls}">
           <div class="r1">${isHol?'Jarní prázdniny':'Volný týden — náhradní termíny (NT)'}
