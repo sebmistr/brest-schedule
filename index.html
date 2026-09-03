@@ -30,6 +30,21 @@
   .cpy svg{width:13px;height:13px}
   .cpy:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 9%,transparent)}
   .cpy.ok{color:var(--win)}
+  /* editovatelná pole (termín / herna) */
+  .editlink{font:inherit;font-size:11px;background:none;border:none;color:color-mix(in srgb,var(--team) var(--tp),#000);cursor:pointer;padding:0 0 0 7px;text-decoration:underline;text-underline-offset:2px}
+  .editlink:hover{color:var(--team)}
+  .orig{color:var(--muted);font-size:11px;margin-left:6px}
+  .editinput{font:inherit;font-size:12.5px;padding:3px 8px;border:1px solid color-mix(in srgb,var(--team) 45%,var(--line));border-radius:7px;background:var(--surf2);color:var(--ink);min-width:210px;max-width:100%;outline:none}
+  .editinput:focus{border-color:var(--team)}
+  /* segmentované tlačítko tisku */
+  .seg{display:inline-flex;align-items:stretch;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:var(--surf2)}
+  .seg-lbl{display:inline-flex;align-items:center;padding:9px 12px;font-size:12px;font-weight:700;color:var(--muted);border-right:1px solid var(--line)}
+  .seg-btn{font:inherit;font-size:13px;font-weight:700;border:none;background:none;color:var(--ink);padding:9px 13px;cursor:pointer;border-right:1px solid var(--line)}
+  .seg-btn:last-child{border-right:none}
+  .seg-btn:hover{background:color-mix(in srgb,var(--team) 15%,transparent);color:color-mix(in srgb,var(--team) var(--tp),#000)}
+  /* dvě poloviny osy – na webu splynou do jedné (v kompaktním tisku 2 sloupce) */
+  .tl-col{display:contents}
+  .cprint-line{display:none}   /* jen v kompaktním tisku */
   a:hover{text-decoration:underline}
   b{font-weight:700}
 
@@ -219,14 +234,56 @@
   .foot{max-width:1100px;margin:0 auto;padding:0 22px 44px;color:var(--muted);font-size:11.5px;text-align:center;line-height:1.7}
 
   @media print{
-    @page{margin:12mm}
+    @page{margin:0}                                  /* pryč prohlížečový header/footer (datum, URL, č. stránky) */
     *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    body{background:#fff;--bg:#fff;--surf:#fff;--surf2:#fff;--ink:#111;--muted:#555;--line:#ccc}
-    header,nav.tabs,.subhead .pick,.subhead .btn,.played{display:none!important}
-    main{max-width:none;padding:0}
+    body{background:#fff;--bg:#fff;--surf:#fff;--surf2:#fff;--ink:#111;--muted:#555;--line:#ccc;--tp:50%}
+    header,nav.tabs,.subhead .pick,.subhead .btn,.subhead .seg,.played,.noprint,.flag,.foot,.season-note,.cpy{display:none!important}
+    main{max-width:none;padding:11mm}                /* vlastní okraje místo okrajů stránky */
+    body.print-compact main{padding:7mm}
     section{display:none!important}section#me{display:block!important}
     .hero,.tl-card{break-inside:avoid}.tl-row,.today-marker,.gap-div{break-inside:avoid}
     #printTitle{display:block!important}
+
+    /* ---- KOMPAKTNÍ režim tisku ---- */
+    body.print-compact{font-size:11.5px}
+    body.print-compact #printTitle{font-size:18px;margin:0 0 6px}
+    body.print-compact #heroWrap{display:none}                    /* pryč hero karta */
+    body.print-compact .subhead{display:none}
+    body.print-compact .roster-line,
+    body.print-compact .lastseason,
+    body.print-compact .mc-foot,
+    body.print-compact .ghost,
+    body.print-compact .mc-top,                                   /* hlavička je teď v .cprint-line */
+    body.print-compact .mc-team,
+    body.print-compact .info.alt,                                 /* "Soupeř hraje doma" */
+    body.print-compact .tl-card .r2{display:none!important}
+    body.print-compact .cprint-line{display:block;font-size:13px;line-height:1.25;margin-bottom:2px}
+    body.print-compact .info:nth-of-type(3){order:-1;font-size:10.5px}   /* vedoucí hned jako 2. řádek */
+    body.print-compact .info:nth-of-type(3) span{white-space:nowrap}
+    /* dva sloupce: 1. polovina vlevo, 2. polovina vpravo -> vejde se na 1 stranu */
+    body.print-compact .timeline{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;align-items:start}
+    body.print-compact .tl-col{display:block;min-width:0}
+    body.print-compact .gap-div{display:none}
+    body.print-compact .tl-date{display:none}                     /* datum je teď na kartě */
+    body.print-compact .tl-row,body.print-compact .today-marker{grid-template-columns:12px 1fr;gap:8px}
+    body.print-compact .today-marker>div:empty{display:none}
+    body.print-compact .today-marker .lab{grid-column:2}
+    body.print-compact .dot{margin-top:8px;width:10px;height:10px;box-shadow:none}
+    body.print-compact .tl-card{padding:5px 11px;margin:3px 0;border-radius:0;border-width:0 0 0 3px}
+    body.print-compact .mcard{padding-left:9px}
+    body.print-compact .mc-top{gap:7px}
+    body.print-compact .round{font-size:10px}
+    body.print-compact .mc-team{margin:3px 0}
+    body.print-compact .opp{font-size:12.5px}
+    body.print-compact .ha{background:none!important;border:none!important;color:inherit!important;padding:0;font-size:10px;font-weight:700;text-transform:none}
+    body.print-compact .ha svg{display:none}
+    body.print-compact .infogrid{padding-top:4px;border-top:none;gap:1px}
+    body.print-compact .info{gap:7px;font-size:11.5px}
+    body.print-compact .info svg{width:13px;height:13px}
+    body.print-compact .tl-card.slim{padding:5px 11px}
+    body.print-compact .tl-card.slim .r1{font-size:11.5px}
+    body.print-compact .nt-tag{display:none}                      /* "(NT)" jen mimo kompakt */
+    body.print-compact .gap-div{padding:5px 0;font-size:9px}
   }
   #printTitle{display:none;font-size:19px;font-weight:900;margin:0 0 12px}
 
@@ -312,7 +369,11 @@
       <h1 style="margin:0">Časová osa sezóny</h1>
       <div style="display:flex;gap:10px;align-items:center">
         <div class="pick"><label for="refDate">Náhled k datu</label><input type="date" id="refDate"></div>
-        <button class="btn" onclick="window.print()">Tisk / PDF</button>
+        <div class="seg">
+          <span class="seg-lbl">Tisk / PDF:</span>
+          <button type="button" class="seg-btn" onclick="printMode(false)" title="Vše – soupeři, kontakty, herna/čas, soupisky i statistiky">Plný</button>
+          <button type="button" class="seg-btn" onclick="printMode(true)" title="Jen rozpis zápasů na minimum místa, ve dvou sloupcích">Kompaktní</button>
+        </div>
       </div>
     </div>
     <h2 id="printTitle"></h2>
@@ -477,6 +538,75 @@ function fmtRange(s,e){const a=pd(s),b=pd(e),y=b.getFullYear();
   return a.getDate()+'. '+(a.getMonth()+1)+'. – '+b.getDate()+'. '+(b.getMonth()+1)+'. '+y;}
 function today0(){const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
 function toISO(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+// konkrétní datum hracího dne v týdnu daného zápasu
+const DOW={'pondělí':1,'úterý':2,'středa':3,'čtvrtek':4,'pátek':5,'sobota':6,'neděle':7};
+function fmtDay(d){return d.getDate()+'. '+(d.getMonth()+1)+'. '+d.getFullYear();}
+function dateForWeekday(iso,wd){
+  const d=pd(iso), isoWd=(d.getDay()===0)?7:d.getDay();
+  const t=new Date(d); t.setDate(d.getDate()-(isoWd-1)+(wd-1)); return t;   // od pondělí daného týdne
+}
+// termín zápasu: konkrétní datum(y) z hracího dne; u "dle domluvy" ponechá interval
+function terminStr(day,time,s,e,plain){
+  const bo=plain?'':'<b>', bc=plain?'':'</b>', sep=plain?'   /   ':'&nbsp; / &nbsp;';
+  const days=String(day).split('/').map(x=>x.trim());
+  const times=String(time).split('/').map(x=>x.trim());
+  let concrete=false; const parts=[];
+  days.forEach((dp,i)=>{
+    const wd=DOW[dp.toLowerCase()], tm=times[i]||times[0]||'';
+    if(wd){ concrete=true; parts.push(`${dp} ${bo}${fmtDay(dateForWeekday(s,wd))}${bc}${tm?' · '+tm:''}`); }
+    else { parts.push(`${dp}${tm&&tm!==dp?' · '+tm:''}`); }
+  });
+  if(!concrete){ const tm=(time&&time!==day)?' · '+time:''; return `${bo}${fmtRange(s,e)}${bc} · ${day}${tm}`; }
+  return parts.join(sep);
+}
+function terminHtml(day,time,s,e){return terminStr(day,time,s,e,false);}
+function terminPlain(day,time,s,e){return terminStr(day,time,s,e,true);}
+
+/* ---- ručně upravitelná pole (termín / herna), ukládaná do localStorage ---- */
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function editKey(round,field){return 'edit6liga_'+myTeam+'_'+round+'_'+field;}
+function getEdit(round,field){return localStorage.getItem(editKey(round,field));}
+function editField(round,field,origPlain,origHtml){
+  const custom=getEdit(round,field);
+  const changed=custom!=null && custom!==origPlain;
+  const evHtml=custom!=null?escHtml(custom):origHtml;
+  return `<span class="editable" data-round="${round}" data-field="${field}" data-orig="${escHtml(origPlain).replace(/"/g,'&quot;')}">`
+    +`<span class="ev">${evHtml}</span>`
+    +`<span class="orightml" hidden>${origHtml}</span>`
+    +`<button type="button" class="editlink noprint" onclick="startEdit(this)">upravit</button>`
+    +(changed?`<span class="orig noprint">(původně ${escHtml(origPlain)})</span>`:'')
+    +`</span>`;
+}
+function startEdit(btn){
+  const wrap=btn.closest('.editable'); if(!wrap||wrap.classList.contains('editing'))return;
+  const round=wrap.dataset.round, field=wrap.dataset.field, orig=wrap.dataset.orig;
+  const cur=getEdit(round,field)??orig;
+  const ev=wrap.querySelector('.ev'); ev.style.display='none';
+  wrap.classList.add('editing');
+  const inp=document.createElement('input');
+  inp.type='text'; inp.className='editinput'; inp.value=cur;
+  wrap.insertBefore(inp,ev); inp.focus(); inp.select();
+  const commit=()=>{
+    const val=inp.value.trim();
+    if(val===''||val===orig) localStorage.removeItem(editKey(round,field));
+    else localStorage.setItem(editKey(round,field),val);
+    rebuildEditable(wrap);
+  };
+  inp.addEventListener('blur',commit,{once:true});
+  inp.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();inp.blur();} else if(e.key==='Escape'){inp.value=cur;inp.blur();} });
+}
+function rebuildEditable(wrap){
+  const round=wrap.dataset.round, field=wrap.dataset.field, orig=wrap.dataset.orig;
+  const custom=getEdit(round,field);
+  const origHtml=wrap.querySelector('.orightml').innerHTML;
+  const inp=wrap.querySelector('.editinput'); if(inp)inp.remove();
+  const ev=wrap.querySelector('.ev'); ev.style.display=''; ev.innerHTML=custom!=null?escHtml(custom):origHtml;
+  let og=wrap.querySelector('.orig');
+  if(custom!=null && custom!==orig){ if(!og){og=document.createElement('span'); og.className='orig noprint'; wrap.appendChild(og);} og.innerHTML='(původně '+escHtml(orig)+')'; }
+  else if(og){ og.remove(); }
+  wrap.classList.remove('editing');
+  if(typeof renderHero==='function') renderHero();   // ať se sync i „nejbližší zápas" v hero
+}
 
 /* ---------- STATE ---------- */
 let myTeam = Number(localStorage.getItem('myTeam6liga'))||0;
@@ -503,6 +633,10 @@ function applyTheme(dark){document.body.classList.toggle('light',!dark);themeBtn
 themeBtn.onclick=()=>applyTheme(document.body.classList.contains('light'));
 applyTheme(localStorage.getItem('theme6liga')!=='light');
 
+/* tisk – normální / kompaktní režim */
+function printMode(compact){document.body.classList.toggle('print-compact',compact);window.print();}
+window.addEventListener('afterprint',()=>document.body.classList.remove('print-compact'));
+
 document.querySelectorAll('nav.tabs button').forEach(b=>{
   b.onclick=()=>{
     document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.remove('on'));
@@ -522,9 +656,13 @@ function renderHero(){
   if(upcoming.length){
     const nw=upcoming[0];const m=myMatch(myTeam,nw.round);const opp=T[m.opp];
     const where=m.home?t.venue:opp.venue;
+    const nday=m.home?t.day:opp.day, ntime=m.home?t.time:opp.time;
+    const ct=getEdit(nw.round,'termin'), cv=getEdit(nw.round,'venue');
+    const terminD=ct!=null?escHtml(ct):terminHtml(nday,ntime,nw.s,nw.e);
+    const whereD=cv!=null?escHtml(cv):where;
     nextHtml=`<div class="next"><div class="nx-lbl">Nejbližší zápas</div>
       <div class="nx-main"><span class="ha ${m.home?'home':'away'}" style="--oc:${tc(opp.n)}">${m.home?IC.home+' doma':IC.away+' venku'}</span> ${opp.name}</div>
-      <div class="nx-meta">${nw.round}. kolo · ${fmtRange(nw.s,nw.e)} · ${where}</div></div>`;
+      <div class="nx-meta">${nw.round}. kolo · ${terminD} · ${whereD}</div></div>`;
   } else nextHtml=`<div class="next"><div class="nx-main">Sezóna je u konce 🏁</div></div>`;
   w.innerHTML=`<div class="hero">
     <div class="heroball"></div>
@@ -551,28 +689,31 @@ function renderTimeline(){
   pt.textContent='6. liga 2026/27 — '+t.name+' — termínový plán';
   let nowIdx=WEEKS.findIndex(w=>pd(w.e)>=refDate);
   const seasonOver=nowIdx===-1, beforeStart=pd(WEEKS[0].s)>refDate;
-  let html='';
+  let col1='', col2='', half2=false;
   WEEKS.forEach((w,i)=>{
+    let chunk='';
     if(i>0){
       const gapDays=(pd(w.s)-pd(WEEKS[i-1].e))/86400000;
-      if(gapDays>10) html+=`<div class="tl-row"><div></div><div class="tl-axis"></div><div class="gap-div">přestávka</div></div>`;
+      if(gapDays>10) chunk+=`<div class="tl-row"><div></div><div class="tl-axis"></div><div class="gap-div">přestávka</div></div>`;
     }
     if(i===nowIdx && !beforeStart){
       const inWeek = pd(w.s)<=refDate && refDate<=pd(w.e);
-      html+=`<div class="today-marker"><div class="tl-date">${refDate.getDate()}. ${refDate.getMonth()+1}.</div><div></div><div class="lab">DNES${inWeek?' · právě probíhá':''}</div></div>`;
+      chunk+=`<div class="today-marker"><div class="tl-date">${refDate.getDate()}. ${refDate.getMonth()+1}.</div><div></div><div class="lab">DNES${inWeek?' · právě probíhá':''}</div></div>`;
     }
     const isCur=i===nowIdx, isNext=i===nowIdx+1;
     const curCls=isCur?'cur':'';
     if(w.type==='round'){
+      if(w.round===10) half2=true;
       const m=myMatch(myTeam,w.round);const opp=T[m.opp];const oc=tc(opp.n);
       const where=m.home?t.venue:opp.venue;
       const day=m.home?t.day:opp.day, time=m.home?t.time:opp.time;
       const half=w.round<=9?'I. polovina':'II. polovina · odveta';
-      html+=`<div class="tl-row ${isCur?'cur':''}" style="--oc:${oc}">
+      chunk+=`<div class="tl-row ${isCur?'cur':''}" style="--oc:${oc}">
         <div class="tl-date">${fmtRange(w.s,w.e)}</div>
         <div class="tl-axis"><div class="dot"></div></div>
         <div class="tl-card mcard ${curCls} ${isPlayed(w.round)?'done':''}">
           <div class="ghost">${w.round}</div>
+          <div class="cprint-line"><b>${w.round}.</b> kolo · ${w.round<=9?'I. polovina':'II. polovina'} · <b>${opp.name}</b> (${m.home?'doma':'venku'})</div>
           <div class="mc-top">
             <span class="round"><b>${w.round}.</b> kolo <i>${half}</i></span>
             ${isCur?'<span class="flag">tento týden</span>':''}${isNext?'<span class="flag">příští týden</span>':''}
@@ -582,8 +723,8 @@ function renderTimeline(){
             <span class="opp">${opp.name}</span>
           </div>
           <div class="infogrid">
-            <div class="info">${IC.pin}<span>${where}</span></div>
-            <div class="info">${IC.clock}<span>${day} · ${time}</span></div>
+            <div class="info">${IC.pin}<span>${editField(w.round,'venue',where,where)}</span></div>
+            <div class="info">${IC.clock}<span>${editField(w.round,'termin',terminPlain(day,time,w.s,w.e),terminHtml(day,time,w.s,w.e))}</span></div>
             <div class="info">${IC.user}<span>${opp.players[0].name} · ${contact('tel',opp.players[0].phone)} · ${contact('mail',opp.players[0].mail)}</span></div>
             ${m.home?`<div class="info alt">${IC.home}<span>Soupeř hraje doma: ${opp.day} · ${opp.time} · ${opp.venue}</span></div>`:''}
           </div>
@@ -594,20 +735,21 @@ function renderTimeline(){
       </div>`;
     } else {
       const isHol=w.type==='holiday';
-      html+=`<div class="tl-row">
+      chunk+=`<div class="tl-row">
         <div class="tl-date">${fmtRange(w.s,w.e)}</div>
         <div class="tl-axis"><div class="dot ${isHol?'holiday':'nt'}"></div></div>
         <div class="tl-card slim ${isHol?'holiday':'freewk'} ${curCls}">
-          <div class="r1">${isHol?'Jarní prázdniny':'Volný týden — náhradní termíny (NT)'}
+          <div class="r1">${isHol?'Jarní prázdniny':'Volný týden — náhradní termíny<span class="nt-tag"> (NT)</span>'} · <b>${fmtRange(w.s,w.e)}</b>
             ${isCur?'<span class="flag">tento týden</span>':''}${isNext?'<span class="flag">příští týden</span>':''}</div>
           <div class="r2">${w.note||'dohrávky zápasů, které se nestihly odehrát v řádném termínu'}</div>
         </div>
       </div>`;
     }
+    if(half2) col2+=chunk; else col1+=chunk;
   });
-  if(seasonOver) html+=`<div class="tl-card slim"><div class="r1">Sezóna 2026/27 skončila 🏁</div></div>`;
-  if(beforeStart) html=`<div class="tl-card slim" style="margin-bottom:8px"><div class="r1">Sezóna zatím nezačala — start ${fmtRange(WEEKS[0].s,WEEKS[0].e)}</div></div>`+html;
-  box.innerHTML='<div class="timeline">'+html+'</div>';
+  if(seasonOver) col2+=`<div class="tl-card slim season-note"><div class="r1">Sezóna 2026/27 skončila 🏁</div></div>`;
+  if(beforeStart) col1=`<div class="tl-card slim season-note" style="margin-bottom:8px"><div class="r1">Sezóna zatím nezačala — start ${fmtRange(WEEKS[0].s,WEEKS[0].e)}</div></div>`+col1;
+  box.innerHTML='<div class="timeline"><div class="tl-col">'+col1+'</div><div class="tl-col">'+col2+'</div></div>';
 }
 
 /* ---------- DRAW ---------- */
