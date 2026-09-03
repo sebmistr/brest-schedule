@@ -1,0 +1,19 @@
+name: Test pinec fetch (PoC)
+
+# Zatím jen ruční spuštění — ověří dosažitelnost pinecu a parsování.
+# Nic nemění v repu, jen vypisuje do logu.
+on:
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install poppler (pdftotext)
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+
+      - name: Fetch & parse standings from pinec
+        run: python3 scripts/fetch_standings.py
