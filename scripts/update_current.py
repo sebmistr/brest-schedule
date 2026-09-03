@@ -63,6 +63,10 @@ STAND = re.compile(r'^\s*(\d+)\.\s+(.+?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+\d+\s
 # úspěšnost: "1. Rajčan Michal Hravsonauti A 17 51 47 4 148 : 24 92,16 %"
 #            poz. jméno+tým                 U  Z  V  P  míčky      %
 PLAYER = re.compile(r'^\s*\d+\.\s+(.+?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+\d+\s*:\s*\d+\s+[\d,]+\s*%')
+# rozpis:  "541 Út 23.09.2025 16:00 Domácí... Hosté... 3 : 7 12 : 23"  (čas může být "-")
+#          id                       tým1     tým2      skóre  sety
+ROW = re.compile(r'^\s*\d+\s+\S+\s+\d{2}\.\d{2}\.\d{4}\s+(?:[\d:]+|-)\s+(.+?)\s+(\d+)\s*:\s*(\d+)\s+(\d+)\s*:\s*(\d+)\s*$')
+RND = re.compile(r'(\d+)\.\s*kolo stupně')
 
 def fetch_text():
     sh(f'curl -s -m 40 -A "Mozilla/5.0" -c cj.txt '
@@ -103,6 +107,43 @@ def parse(text):
                     teams[str(tn)] = {"pos": int(pos), "w": int(V), "d": int(R), "l": int(P)}
     return teams, players
 
+def fetch_rozpis():
+    sh(f'curl -s -m 40 -A "Mozilla/5.0" -c cj.txt '
+       f'"https://www.pinec.info/htm/rozpis/?soutez={SOUTEZ}" -o /dev/null')
+    code = sh(f'curl -s -m 60 -A "Mozilla/5.0" -w "%{{http_code}}" -b cj.txt '
+             f'-e "https://www.pinec.info/htm/rozpis/?soutez={SOUTEZ}" '
+             f'"https://www.pinec.info/pdf/rozpis/?soutez={SOUTEZ}&order=" -o roz.pdf').stdout.strip()
+    size = os.path.getsize("roz.pdf") if os.path.exists("roz.pdf") else 0
+    print(f"rozpis HTTP {code}, PDF {size} B")
+    if size < 1500:
+        return None
+    return sh('pdftotext -layout roz.pdf -').stdout
+
+def parse_results(text):
+    aliases = sorted(TEAM_MAP.keys(), key=len, reverse=True)
+    results, rnd = {}, None
+    for line in text.splitlines():
+        h = RND.search(line)
+        if h:
+            rnd = int(h.group(1)); continue
+        if rnd is None:
+            continue
+        m = ROW.match(line)
+        if not m:
+            continue
+        ha, sc_h, sc_a, se_h, se_a = m.groups()
+        nt = norm(ha)
+        home = away = None
+        for a in aliases:
+            if nt.endswith(' ' + a):
+                away = TEAM_MAP[a]
+                home = TEAM_MAP.get(norm(nt[:len(nt) - len(a)]))
+                break
+        if home and away:
+            results.setdefault(str(rnd), {})[str(home)] = {
+                "a": away, "sc": [int(sc_h), int(sc_a)], "se": [int(se_h), int(se_a)]}
+    return results
+
 def now_str():
     try:
         from zoneinfo import ZoneInfo
@@ -137,12 +178,18 @@ def main():
     except Exception:
         old = None
 
+    # výsledky z rozpisu; při chybě stažení ponech stará data
+    rtext = fetch_rozpis()
+    results = parse_results(rtext) if rtext is not None else (old or {}).get("results", {})
+    print(f"výsledky: {len(results)} kol, {sum(len(v) for v in results.values())} zápasů")
+
     new_teams = {k: teams[k] for k in sorted(teams, key=int)}
-    new = {"updated": None, "teams": new_teams, "players": players}
+    new = {"updated": None, "teams": new_teams, "players": players, "results": results}
 
     unchanged = (old is not None
                  and old.get("teams") == new["teams"]
-                 and old.get("players") == new["players"])
+                 and old.get("players") == new["players"]
+                 and old.get("results") == new["results"])
     if unchanged:
         print("Data se nezměnila — žádný zápis, žádný commit.")
         return 0

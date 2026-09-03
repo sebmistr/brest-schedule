@@ -134,6 +134,28 @@
   .round b{color:color-mix(in srgb,var(--oc) var(--tp),#000);font-size:15px}
   .round i{color:var(--muted);font-weight:600;font-style:normal;margin-left:6px}
   .flag{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#0b0c12;background:var(--oc);padding:3px 8px;border-radius:999px}
+  /* odehraný zápas – badge výsledku + skóre */
+  .rbadge{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:3px 9px;border-radius:999px}
+  .rbadge.win{background:color-mix(in srgb,var(--win) 24%,transparent);color:color-mix(in srgb,var(--win) var(--tp),#000)}
+  .rbadge.loss{background:color-mix(in srgb,var(--loss) 24%,transparent);color:color-mix(in srgb,var(--loss) var(--tp),#000)}
+  .rbadge.draw{background:color-mix(in srgb,var(--muted) 20%,transparent);color:var(--muted)}
+  .rslt{margin-left:auto;display:inline-flex;align-items:baseline;gap:9px;white-space:nowrap;padding-left:10px}
+  .rslt .sc{font-size:19px;font-weight:900;letter-spacing:-.02em}
+  .rslt .st{font-size:10.5px;font-weight:700;color:var(--muted)}
+  .rslt.win .sc{color:color-mix(in srgb,var(--win) var(--tp),#000)}
+  .rslt.loss .sc{color:color-mix(in srgb,var(--loss) var(--tp),#000)}
+  .rslt.draw .sc{color:var(--ink)}
+  .dot.done{background:var(--muted);box-shadow:none}
+  .mcard.played{cursor:pointer}
+  .mcard.played::after{content:"";position:absolute;left:50%;transform:translateX(-50%);bottom:6px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--muted);opacity:.5;transition:transform .15s}
+  .mcard.played.expanded::after{transform:translateX(-50%) rotate(180deg)}
+  .mcard.played:hover{border-color:color-mix(in srgb,var(--oc) 45%,var(--line))}
+  @media screen{
+    .mcard.played:not(.expanded) .infogrid,
+    .mcard.played:not(.expanded) .roster-line,
+    .mcard.played:not(.expanded) .lastseason{display:none}
+    .mcard.played:not(.expanded){padding-bottom:13px}
+  }
 
   .mc-team{display:flex;align-items:center;gap:12px;margin:13px 0;flex-wrap:wrap}
   .ha{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding:6px 12px;border-radius:999px;display:inline-flex;align-items:center;gap:6px}
@@ -166,18 +188,6 @@
   .pwl.old{margin-left:5px;font-size:10px;font-weight:700;opacity:.8}
   .pwl.old::before{content:"(";color:var(--muted);font-weight:600}.pwl.old::after{content:")";color:var(--muted);font-weight:600}
   .pwl.none{color:var(--muted);font-weight:600}
-
-  .mc-foot{display:flex;justify-content:flex-end;margin-top:12px}
-  .played{display:inline-flex;align-items:center;gap:9px;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap}
-  .played input{position:absolute;opacity:0;width:0;height:0}
-  .played .switch{width:40px;height:22px;border-radius:999px;background:var(--surf2);border:1px solid var(--line);position:relative;transition:.2s;flex:none}
-  .played .switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--muted);transition:.2s}
-  .played input:checked + .switch{background:var(--oc);border-color:var(--oc)}
-  .played input:checked + .switch::after{transform:translateX(18px);background:#0b0c12}
-  .played input:focus-visible + .switch{outline:2px solid var(--oc);outline-offset:2px}
-  .played input:checked ~ .pl-txt{color:color-mix(in srgb,var(--oc) var(--tp),#000)}
-  .tl-card.done{opacity:.62}
-  .tl-card.done .opp{text-decoration:line-through;text-decoration-thickness:2px}
 
   .tl-card.cur{border-color:var(--oc);box-shadow:0 0 0 1px var(--oc),0 12px 34px color-mix(in srgb,var(--oc) 26%,transparent)}
   .tl-row.cur .dot{box-shadow:0 0 0 5px color-mix(in srgb,var(--oc) 26%,transparent),0 0 18px color-mix(in srgb,var(--oc) 50%,transparent)}
@@ -237,7 +247,8 @@
     @page{margin:0}                                  /* pryč prohlížečový header/footer (datum, URL, č. stránky) */
     *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     body{background:#fff;--bg:#fff;--surf:#fff;--surf2:#fff;--ink:#111;--muted:#555;--line:#ccc;--tp:50%}
-    header,nav.tabs,.subhead .pick,.subhead .btn,.subhead .seg,.played,.noprint,.flag,.foot,.season-note,.cpy{display:none!important}
+    header,nav.tabs,.subhead .pick,.subhead .btn,.subhead .seg,.noprint,.flag,.foot,.season-note,.cpy{display:none!important}
+    .mcard.played::after{display:none!important}
     main{max-width:none;padding:11mm}                /* vlastní okraje místo okrajů stránky */
     body.print-compact main{padding:7mm}
     section{display:none!important}section#me{display:block!important}
@@ -255,11 +266,13 @@
     body.print-compact .ghost,
     body.print-compact .mc-top,                                   /* hlavička je teď v .cprint-line */
     body.print-compact .mc-team,
+    body.print-compact .rslt,                                     /* výsledek do kompaktu nedáváme */
     body.print-compact .info.alt,                                 /* "Soupeř hraje doma" */
     body.print-compact .tl-card .r2{display:none!important}
     body.print-compact .cprint-line{display:block;font-size:13px;line-height:1.25;margin-bottom:2px}
-    body.print-compact .info:nth-of-type(3){order:-1;font-size:10.5px}   /* vedoucí hned jako 2. řádek */
-    body.print-compact .info:nth-of-type(3) span{white-space:nowrap}
+    body.print-compact .info:nth-of-type(3){order:-1;font-size:10.5px;align-items:flex-start}   /* vedoucí hned jako 2. řádek */
+    body.print-compact .info:nth-of-type(3) span{white-space:normal;overflow-wrap:break-word;min-width:0}  /* dlouhý mail se zalomí na další řádek, ať je celý vidět */
+    body.print-compact .info a{color:#000;font-weight:800;text-decoration:none}  /* kontakty tmavě = čitelné i černobíle */
     /* dva sloupce: 1. polovina vlevo, 2. polovina vpravo -> vejde se na 1 stranu */
     body.print-compact .timeline{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;align-items:start}
     body.print-compact .tl-col{display:block;min-width:0}
@@ -369,11 +382,7 @@
       <h1 style="margin:0">Časová osa sezóny</h1>
       <div style="display:flex;gap:10px;align-items:center">
         <div class="pick"><label for="refDate">Náhled k datu</label><input type="date" id="refDate"></div>
-        <div class="seg">
-          <span class="seg-lbl">Tisk / PDF:</span>
-          <button type="button" class="seg-btn" onclick="printMode(false)" title="Vše – soupeři, kontakty, herna/čas, soupisky i statistiky">Plný</button>
-          <button type="button" class="seg-btn" onclick="printMode(true)" title="Jen rozpis zápasů na minimum místa, ve dvou sloupcích">Kompaktní</button>
-        </div>
+        <button class="btn" onclick="window.print()">Tisk / PDF</button>
       </div>
     </div>
     <h2 id="printTitle"></h2>
@@ -453,7 +462,7 @@ TEAMS.forEach(t=>t.last=LAST[t.n]);
 
 /* ===== AUTO:CURRENT:START — tento blok přepisuje GitHub Action (scripts/update_current.py).
    Formát: teams[čísloTýmu]={pos,w,d,l}; players[čísloTýmu][jméno]=[výhry,prohry]. ===== */
-const CURRENT = {"updated": null, "teams": {}, "players": {}};
+const CURRENT = {"updated": null, "teams": {}, "players": {}, "results": {}};
 /* ===== AUTO:CURRENT:END ===== */
 TEAMS.forEach(t=>{
   t.cur = (CURRENT && CURRENT.teams && CURRENT.teams[t.n]) || null;
@@ -461,6 +470,20 @@ TEAMS.forEach(t=>{
   t.roster.forEach(p=>{ p.curwl = pc[p.name] || null; });
 });
 const T = {}; TEAMS.forEach(t=>T[t.n]=t);
+// výsledek zápasu daného týmu v daném kole (z naskrapovaných dat) – z pohledu týmu
+function getResult(round, team){
+  const rr = (CURRENT && CURRENT.results) ? CURRENT.results[round] : null;
+  if(!rr) return null;
+  for(const h in rr){ const e=rr[h], hn=+h;
+    if(hn===team) return {home:true, us:e.sc[0], them:e.sc[1], usS:e.se[0], themS:e.se[1], opp:e.a};
+    if(e.a===team) return {home:false, us:e.sc[1], them:e.sc[0], usS:e.se[1], themS:e.se[0], opp:hn};
+  }
+  return null;
+}
+function toggleCard(el,ev){
+  if(ev){const t=ev.target; if(t.closest && t.closest('a,button,input,.editable')) return;}
+  el.classList.toggle('expanded');
+}
 
 function lastHtml(t){
   const L=t.last; if(!L) return '';
@@ -634,7 +657,8 @@ themeBtn.onclick=()=>applyTheme(document.body.classList.contains('light'));
 applyTheme(localStorage.getItem('theme6liga')!=='light');
 
 /* tisk – normální / kompaktní režim */
-function printMode(compact){document.body.classList.toggle('print-compact',compact);window.print();}
+// tisk je vždy kompaktní (jediný režim)
+window.addEventListener('beforeprint',()=>document.body.classList.add('print-compact'));
 window.addEventListener('afterprint',()=>document.body.classList.remove('print-compact'));
 
 document.querySelectorAll('nav.tabs button').forEach(b=>{
@@ -708,19 +732,26 @@ function renderTimeline(){
       const where=m.home?t.venue:opp.venue;
       const day=m.home?t.day:opp.day, time=m.home?t.time:opp.time;
       const half=w.round<=9?'I. polovina':'II. polovina · odveta';
+      const res=getResult(w.round,myTeam);
+      const oc2=res?(res.us>res.them?'win':(res.us<res.them?'loss':'draw')):'';
+      const outLbl=oc2==='win'?'výhra':(oc2==='loss'?'prohra':'remíza');
+      const rsltHtml=res?`<span class="rslt ${oc2}"><span class="sc">${res.us}:${res.them}</span><span class="st">sety ${res.usS}:${res.themS}</span></span>`:'';
+      const badge=res?`<span class="rbadge ${oc2}">${outLbl}</span>`
+        :`${isCur?'<span class="flag">tento týden</span>':''}${isNext?'<span class="flag">příští týden</span>':''}`;
       chunk+=`<div class="tl-row ${isCur?'cur':''}" style="--oc:${oc}">
         <div class="tl-date">${fmtRange(w.s,w.e)}</div>
-        <div class="tl-axis"><div class="dot"></div></div>
-        <div class="tl-card mcard ${curCls} ${isPlayed(w.round)?'done':''}">
+        <div class="tl-axis"><div class="dot ${res?'done':''}"></div></div>
+        <div class="tl-card mcard ${res?'played '+oc2:''} ${w.round>=10?'rnd2':''} ${curCls}"${res?' onclick="toggleCard(this,event)"':''}>
           <div class="ghost">${w.round}</div>
           <div class="cprint-line"><b>${w.round}.</b> kolo · ${w.round<=9?'I. polovina':'II. polovina'} · <b>${opp.name}</b> (${m.home?'doma':'venku'})</div>
           <div class="mc-top">
             <span class="round"><b>${w.round}.</b> kolo <i>${half}</i></span>
-            ${isCur?'<span class="flag">tento týden</span>':''}${isNext?'<span class="flag">příští týden</span>':''}
+            ${badge}
           </div>
           <div class="mc-team">
             <span class="ha ${m.home?'home':'away'}">${m.home?IC.home+' doma':IC.away+' venku'}</span>
             <span class="opp">${opp.name}</span>
+            ${rsltHtml}
           </div>
           <div class="infogrid">
             <div class="info">${IC.pin}<span>${editField(w.round,'venue',where,where)}</span></div>
@@ -730,7 +761,6 @@ function renderTimeline(){
           </div>
           <div class="roster-line">${IC.squad}<span class="rlist">${opp.roster.map(p=>`<span class="rp">${sexIco(p.sex)}${p.name}${wlHtml(p)}</span>`).join('')}</span></div>
           ${curHtml(opp)}${lastHtml(opp)}
-          <div class="mc-foot"><label class="played"><input type="checkbox" ${isPlayed(w.round)?'checked':''} onchange="togglePlayed(${w.round},this)"><span class="switch"></span><span class="pl-txt">Odehráno</span></label></div>
         </div>
       </div>`;
     } else {
