@@ -23,9 +23,10 @@ def fetch_pdf(soutez, outpdf):
 def pdftext(pdf):
     return sh(f'pdftotext -layout "{pdf}" -').stdout
 
-# řádek tabulky: "1. BBB A 18 18 0 0 0 143:37 72"
-#                poz. tým        U  V  R  P  K  skóre  body
-STAND = re.compile(r'^\s*(\d+)\.\s+(.+?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+\d+\s+\d+\s*:\s*\d+\s+(\d+)\s*$')
+# řádek tabulky: "1. BBB A 18 18 0 0 0 143:37 72"  (poz. tým U V R P K skóre body)
+# POZOR: PDF má 2 sloupce a pdftotext -layout je slepí na jeden řádek, takže za
+# body může být další text (výsledky kol) -> nekotvíme konec řádku ($), jen body.
+STAND = re.compile(r'^\s*(\d+)\.\s+(.+?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+\d+\s+\d+\s*:\s*\d+\s+(\d+)(?:\s|$)')
 
 def parse(text):
     out = []
