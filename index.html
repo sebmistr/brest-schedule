@@ -76,9 +76,9 @@
     display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:start}
   .hero::after{content:"";position:absolute;right:-60px;top:-80px;width:260px;height:260px;border-radius:50%;
     background:radial-gradient(circle,color-mix(in srgb,var(--team) 40%,transparent),transparent 68%);pointer-events:none}
-  .numbadge{position:relative;z-index:1;width:84px;height:84px;border-radius:22px;display:grid;place-items:center;
-    background:var(--team);color:#0b0c12;font-size:42px;font-weight:900;letter-spacing:-.03em;
-    box-shadow:0 12px 30px color-mix(in srgb,var(--team) 45%,transparent)}
+  .heroball{position:relative;z-index:1;width:72px;height:72px;border-radius:50%;flex:none;
+    background:radial-gradient(circle at 34% 30%, #fff, var(--team) 76%);
+    box-shadow:0 12px 30px color-mix(in srgb,var(--team) 45%,transparent), inset 0 0 0 1px rgba(255,255,255,.15)}
   .hero .hz{position:relative;z-index:1}
   .hero .name{font-size:27px;font-weight:900;letter-spacing:-.02em;margin:2px 0 0;line-height:1.05}
   .hero .sub{color:var(--muted);font-size:13.5px;margin-top:9px}
@@ -141,9 +141,15 @@
   .lastseason{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-top:12px;padding-top:11px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
   .lastseason .lstxt b{color:var(--ink);font-weight:700}
   .lastseason .wdl{margin-left:auto;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .lastseason.now{border-top-color:color-mix(in srgb,var(--oc,var(--team)) 45%,var(--line))}
+  .lastseason.now .lab{color:color-mix(in srgb,var(--oc,var(--team)) var(--tp),#000)}
+  .lastseason.now .lstxt b{color:var(--ink)}
   .trend{font-size:11px}.trend.up{color:color-mix(in srgb,var(--win) var(--tp),#000)}.trend.down{color:color-mix(in srgb,var(--loss) var(--tp),#000)}.trend.stay{color:var(--muted)}
   .w{color:color-mix(in srgb,var(--win) var(--tp),#000)}.d{color:var(--muted)}.l{color:color-mix(in srgb,var(--loss) var(--tp),#000)}
-  .pwl{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;margin-left:3px;padding-left:7px;border-left:1px solid var(--line)}
+  .pwl{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
+  .pwl.now{margin-left:4px;padding-left:7px;border-left:1px solid var(--line)}
+  .pwl.old{margin-left:5px;font-size:10px;font-weight:700;opacity:.8}
+  .pwl.old::before{content:"(";color:var(--muted);font-weight:600}.pwl.old::after{content:")";color:var(--muted);font-weight:600}
   .pwl.none{color:var(--muted);font-weight:600}
 
   .mc-foot{display:flex;justify-content:flex-end;margin-top:12px}
@@ -244,7 +250,7 @@
 
     /* hero kompaktnější */
     .hero{grid-template-columns:auto 1fr;gap:16px;padding:19px 18px;border-radius:18px}
-    .numbadge{width:60px;height:60px;border-radius:15px;font-size:30px}
+    .heroball{width:54px;height:54px}
     .hero .name{font-size:21px}
     .hero .sub{font-size:13px}
     .hero .facts{gap:14px}
@@ -370,7 +376,12 @@ const ROSTERS = {
  10:[['Buriánek Michal','M',[8,6]],['Šimků Sebastian','M',[35,13]],['Suchánek Lukáš','M',[10,27]],['Rajčan Michal','M',[47,4]]],
 };
 TEAMS.forEach(t=>t.roster=(ROSTERS[t.n]||[]).map(([name,sex,wl])=>({name,sex,wl:wl||null})));
-function wlHtml(p){return p.wl?`<span class="pwl"><b class="w">${p.wl[0]}</b>–<b class="l">${p.wl[1]}</b></span>`:`<span class="pwl none">—</span>`;}
+// bilance hráče: letos (barevně) + loni (tlumeně v závorce)
+function wlHtml(p){
+  const cur=p.curwl?`<span class="pwl now" title="letos (výhry–prohry)"><b class="w">${p.curwl[0]}</b>–<b class="l">${p.curwl[1]}</b></span>`:`<span class="pwl now none" title="letos">–</span>`;
+  const old=p.wl?`<span class="pwl old" title="loni (výhry–prohry)"><b class="w">${p.wl[0]}</b>–<b class="l">${p.wl[1]}</b></span>`:`<span class="pwl old none" title="loni">–</span>`;
+  return cur+old;
+}
 // Loňská sezóna (zdroj: pinec.info) – liga, umístění, výhry/remízy/prohry
 const LAST = {
  1:{lg:6,pos:10,w:3, d:2,l:13}, 2:{lg:5,pos:9, w:4, d:3,l:11}, 3:{lg:6,pos:4, w:10,d:2,l:6},
@@ -378,6 +389,16 @@ const LAST = {
  7:{lg:6,pos:7, w:5, d:1,l:12}, 8:{lg:6,pos:8, w:4, d:3,l:11}, 9:{lg:5,pos:10,w:0, d:4,l:14}, 10:{lg:7,pos:1,w:17,d:0,l:1},
 };
 TEAMS.forEach(t=>t.last=LAST[t.n]);
+
+/* ===== AUTO:CURRENT:START — tento blok přepisuje GitHub Action (scripts/update_current.py).
+   Formát: teams[čísloTýmu]={pos,w,d,l}; players[čísloTýmu][jméno]=[výhry,prohry]. ===== */
+const CURRENT = {"updated": null, "teams": {}, "players": {}};
+/* ===== AUTO:CURRENT:END ===== */
+TEAMS.forEach(t=>{
+  t.cur = (CURRENT && CURRENT.teams && CURRENT.teams[t.n]) || null;
+  const pc = (CURRENT && CURRENT.players && CURRENT.players[t.n]) || {};
+  t.roster.forEach(p=>{ p.curwl = pc[p.name] || null; });
+});
 const T = {}; TEAMS.forEach(t=>T[t.n]=t);
 
 function lastHtml(t){
@@ -388,6 +409,12 @@ function lastHtml(t){
   return `<div class="lastseason"><span class="lab">Loni</span><span class="lstxt"><b>${L.lg}. liga</b> · <b>${L.pos}. místo</b></span>`
     +`<span class="trend ${trend}" title="${tip}">${arr}</span>`
     +`<span class="wdl"><span class="w">${L.w}</span> V · <span class="d">${L.d}</span> R · <span class="l">${L.l}</span> P</span></div>`;
+}
+// aktuální sezóna (stejná 6. liga) – zobrazí se jen když jsou data (po startu sezóny)
+function curHtml(t){
+  const C=t.cur; if(!C) return '';
+  return `<div class="lastseason now"><span class="lab">Letos</span><span class="lstxt"><b>${C.pos}. místo</b></span>`
+    +`<span class="wdl"><span class="w">${C.w}</span> V · <span class="d">${C.d}</span> R · <span class="l">${C.l}</span> P</span></div>`;
 }
 function sexIco(sex){const c=sex==='Z'?'#f472d0':'#5aa2ff';return `<svg viewBox="0 0 24 24" width="12" height="12" style="vertical-align:-1px;flex:none"><path fill="${c}" d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 1.6c-4.1 0-7.5 2.1-7.5 4.7V20h15v-1.7c0-2.6-3.4-4.7-7.5-4.7Z"/></svg>`;}
 const IC={
@@ -500,7 +527,7 @@ function renderHero(){
       <div class="nx-meta">${nw.round}. kolo · ${fmtRange(nw.s,nw.e)} · ${where}</div></div>`;
   } else nextHtml=`<div class="next"><div class="nx-main">Sezóna je u konce 🏁</div></div>`;
   w.innerHTML=`<div class="hero">
-    <div class="numbadge">${t.n}</div>
+    <div class="heroball"></div>
     <div class="hz">
       <p class="name">${t.name}</p>
       <div class="sub">Vedoucí: <b>${t.players[0].name}</b> · ${contact('tel',t.players[0].phone)} · ${contact('mail',t.players[0].mail)}</div>
@@ -509,6 +536,7 @@ function renderHero(){
         <div><span class="lab">Hrací den</span><span>${t.day}</span></div>
         <div><span class="lab">Čas</span><span>${t.time}</span></div>
       </div>
+      ${curHtml(t)}${lastHtml(t)}
     </div>
     ${nextHtml}
   </div>`;
@@ -551,7 +579,7 @@ function renderTimeline(){
           </div>
           <div class="mc-team">
             <span class="ha ${m.home?'home':'away'}">${m.home?IC.home+' doma':IC.away+' venku'}</span>
-            <span class="opp"><span class="dotnum">${opp.n}</span>${opp.name}</span>
+            <span class="opp">${opp.name}</span>
           </div>
           <div class="infogrid">
             <div class="info">${IC.pin}<span>${where}</span></div>
@@ -560,7 +588,7 @@ function renderTimeline(){
             ${m.home?`<div class="info alt">${IC.home}<span>Soupeř hraje doma: ${opp.day} · ${opp.time} · ${opp.venue}</span></div>`:''}
           </div>
           <div class="roster-line">${IC.squad}<span class="rlist">${opp.roster.map(p=>`<span class="rp">${sexIco(p.sex)}${p.name}${wlHtml(p)}</span>`).join('')}</span></div>
-          ${lastHtml(opp)}
+          ${curHtml(opp)}${lastHtml(opp)}
           <div class="mc-foot"><label class="played"><input type="checkbox" ${isPlayed(w.round)?'checked':''} onchange="togglePlayed(${w.round},this)"><span class="switch"></span><span class="pl-txt">Odehráno</span></label></div>
         </div>
       </div>`;
@@ -609,6 +637,7 @@ function renderTeams(){
       <div class="players">
         ${t.players.map(p=>`<div class="player"><b>${p.name}</b>${p.lead?'<span class="lead">ved.</span>':''} · ${contact('tel',p.phone)} · ${contact('mail',p.mail)}</div>`).join('')}
       </div>
+      <div class="row"><span class="lab" style="align-self:start;padding-top:2px;color:color-mix(in srgb,var(--tc) var(--tp),#000)">Letos</span><span>${t.cur?`${t.cur.pos}. místo · <span class="w">${t.cur.w}</span> V · <span class="d">${t.cur.d}</span> R · <span class="l">${t.cur.l}</span> P`:'—'}</span></div>
       <div class="row"><span class="lab" style="align-self:start;padding-top:2px">Loni</span><span>${t.last?`${t.last.lg}. liga · ${t.last.pos}. místo · <span class="w">${t.last.w}</span> V · <span class="d">${t.last.d}</span> R · <span class="l">${t.last.l}</span> P`:'—'}</span></div>
       <div class="row"><span class="lab" style="align-self:start;padding-top:2px">Soupiska</span><span><div class="roster">${t.roster.map(p=>`<span class="rp">${sexIco(p.sex)}${p.name}${wlHtml(p)}</span>`).join('')}</div></span></div>
       <div class="row"><span class="lab" style="align-self:start;padding-top:2px">Herna</span><span>${t.venue}</span></div>
@@ -618,9 +647,9 @@ function renderTeams(){
     </div>`).join('');
 }
 
-document.getElementById('genderLegend').innerHTML=`${sexIco('M')} muž &nbsp; ${sexIco('Z')} žena`;
+document.getElementById('genderLegend').innerHTML=`${sexIco('M')} muž &nbsp; ${sexIco('Z')} žena &nbsp;·&nbsp; bilance <b class="w">V</b>–<b class="l">P</b>: letos <span style="opacity:.7">(loni)</span>`;
 function renderAll(){applyTeamColor();renderHero();renderTimeline();renderDraw();renderTeams();}
-document.getElementById('foot').textContent='Zdroj: Los_kalendar_adresar_6_liga_2026-2027_FINAL.xlsx · soupisky a tabulky pinec.info · Za STK: Ing. Anna Babjaková · 604 509 449 · ab2007ab@gmail.com';
+document.getElementById('foot').innerHTML='Aktuální tabulka: '+(CURRENT&&CURRENT.updated?CURRENT.updated:'—')+'<br>Zdroj: Los_kalendar_adresar_6_liga_2026-2027_FINAL.xlsx · soupisky a tabulky pinec.info · Za STK: Ing. Anna Babjaková · 604 509 449 · ab2007ab@gmail.com';
 renderAll();
 </script>
 </body>

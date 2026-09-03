@@ -1,0 +1,39 @@
+name: Update standings from pinec
+
+on:
+  workflow_dispatch:          # ruční spuštění
+  schedule:
+    - cron: '*/30 * * * *'    # každých 30 minut
+
+permissions:
+  contents: write             # aby mohl commitnout aktualizovaná data
+
+concurrency:                  # ať neběží dva najednou
+  group: update-standings
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install poppler (pdftotext)
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils
+
+      - name: Fetch & update current data
+        run: python3 scripts/update_current.py
+
+      - name: Commit if changed
+        run: |
+          if [ -n "$(git status --porcelain index.html)" ]; then
+            git config user.name "pinec-bot"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add index.html
+            git commit -m "data: aktualizace tabulky z pinecu ($(date -u +'%Y-%m-%d %H:%M') UTC)"
+            git push
+            echo "Změna commitnuta."
+          else
+            echo "Beze změny — nic ke commitu."
+          fi
