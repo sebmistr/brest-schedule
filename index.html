@@ -667,7 +667,8 @@ function fillTeamSelect(){
   (LEAGUE_TEAMS[league]||[]).forEach(t=>{const o=document.createElement('option');o.value=t.n;o.textContent=t.n+'. '+t.name;sel.appendChild(o);});
   sel.disabled=!league; sel.value=myTeam||'';
 }
-league=Number(localStorage.getItem('league6liga'))||0;
+// bez uložené volby defaultně 6. liga (vracející se návštěvníci uvidí to co dřív)
+league=Number(localStorage.getItem('league6liga'))||6;
 if(league && LEAGUE_TEAMS[league]) attachLeague(league); else league=0;
 if(!league || !T[myTeam]) myTeam=0;
 leagueSel.value=league||'';
