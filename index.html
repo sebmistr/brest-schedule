@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow, noarchive">
-<title>6. liga – Los a termínový kalendář 2026/27</title>
+<title>BREST – Los a termínový kalendář 2026/27</title>
 <style>
   :root{
     --bg:#0b0c12; --surf:#14161f; --surf2:#1b1e29; --ink:#eef0f7; --muted:#868da3; --line:rgba(255,255,255,.09);
@@ -363,9 +363,10 @@
 <body>
 <header>
   <div class="bar">
-    <div class="brand"><span class="ball" aria-hidden="true"></span><div>6. liga · stolní tenis<small>Los &amp; termínový kalendář — 2026/27 — Brno</small></div></div>
+    <div class="brand"><span class="ball" aria-hidden="true"></span><div>BREST · stolní tenis<small>Los &amp; termínový kalendář — 2026/27 — Brno</small></div></div>
     <div class="spacer"></div>
-    <div class="pick"><label for="teamSel">Můj tým</label><select id="teamSel"><option value="">— vyber —</option></select></div>
+    <div class="pick"><label for="leagueSel">Liga</label><select id="leagueSel"><option value="">— vyber ligu —</option></select></div>
+    <div class="pick"><label for="teamSel">Můj tým</label><select id="teamSel" disabled><option value="">— vyber tým —</option></select></div>
     <button id="themeBtn" class="btn iconbtn" title="Přepnout světlý / tmavý režim"></button>
   </div>
   <nav class="tabs">
@@ -407,7 +408,7 @@
 
 <script>
 /* ---------- DATA ---------- */
-const TEAMS = [
+const L6_TEAMS = [
  {n:1, name:'PingPoint Slatina "F"', ab:'Sla F', venue:'Tuřanka 55, Brno-Slatina', day:'dle domluvy', time:'dle domluvy', gear:'Butterfly Octet 25, modrá, 2 stoly', ball:'DHS 40+ ***, plast, bílá',
    players:[{name:'Smejkal Petr',phone:'724 167 064',mail:'smep@email.cz',lead:true},{name:'Vlach Vlastimil',phone:'602 188 235',mail:'vlach.v@seznam.cz'}]},
  {n:2, name:'Orel Bohunice "C"', ab:'OrBo C', venue:'Orlovna, Hraničky 5, Brno-Bohunice', day:'pondělí / pátek', time:'17:15 / 16:30', gear:'Stiga Elite Roller CSS zelený 25 mm, 4 stoly', ball:'DHS 40+ ***, plast, bílá',
@@ -445,7 +446,7 @@ const ROSTERS = {
  9:[['Mrázek Miloš','M',[4,20]],['Sobota Tomáš','M',[22,23]],['Novosad Květoslav','M',[7,23]],['Nešpor Bohumil','M',[9,36]],['Bednář Martin','M',[18,9]]],
  10:[['Buriánek Michal','M',[8,6]],['Šimků Sebastian','M',[35,13]],['Suchánek Lukáš','M',[10,27]],['Rajčan Michal','M',[47,4]]],
 };
-TEAMS.forEach(t=>t.roster=(ROSTERS[t.n]||[]).map(([name,sex,wl])=>({name,sex,wl:wl||null})));
+L6_TEAMS.forEach(t=>t.roster=(ROSTERS[t.n]||[]).map(([name,sex,wl])=>({name,sex,wl:wl||null})));
 // bilance hráče: letos (barevně) + loni (tlumeně v závorce)
 function wlHtml(p){
   const cur=p.curwl?`<span class="pwl now" title="letos (výhry–prohry)"><b class="w">${p.curwl[0]}</b>–<b class="l">${p.curwl[1]}</b></span>`:`<span class="pwl now none" title="letos">–</span>`;
@@ -458,18 +459,32 @@ const LAST = {
  4:{lg:6,pos:5, w:6, d:3,l:9}, 5:{lg:6,pos:6, w:5, d:2,l:11}, 6:{lg:7,pos:2, w:12,d:4,l:2},
  7:{lg:6,pos:7, w:5, d:1,l:12}, 8:{lg:6,pos:8, w:4, d:3,l:11}, 9:{lg:5,pos:10,w:0, d:4,l:14}, 10:{lg:7,pos:1,w:17,d:0,l:1},
 };
-TEAMS.forEach(t=>t.last=LAST[t.n]);
+L6_TEAMS.forEach(t=>t.last=LAST[t.n]);
 
-/* ===== AUTO:CURRENT:START — tento blok přepisuje GitHub Action (scripts/update_current.py).
-   Formát: teams[čísloTýmu]={pos,w,d,l}; players[čísloTýmu][jméno]=[výhry,prohry]. ===== */
-const CURRENT = {"updated": null, "teams": {}, "players": {}, "results": {}};
+/* ostatní ligy (1.–5., 7.) — generováno ze soupisek pinec.info + čísel z brestpin.cz */
+const OTHER_LEAGUES = {"1":[{"n":1,"name":"PingPoint Slatina A","ab":"PS A","venue":"Tuřanka 55","day":"čtvrtek","time":"16:30","gear":"Butterfly, modrá","ball":"Joola Flash","players":[{"name":"Hubatka Lukáš","phone":"608 180 873","mail":"hubatka.lukas@email.cz","lead":true}],"roster":[["Hubatka Lukáš","M",null],["Konečný Libor","M",null],["Patočka Jan","M",null],["Antonín Petr","M",null],["Štefanec Jakub","M",null]],"last":null},{"n":2,"name":"FÉNIX A","ab":"FÉNIX A","venue":"Vojtova 12","day":"pondělí","time":"18:00","gear":"2 stoly","ball":"DHS 40+ ***, plast, bílá","players":[{"name":"Vogel Jiří","phone":"773 579 130","mail":"jirivogel95@gmail.com","lead":true}],"roster":[["Vogel Jiří","M",null],["Balcárek Michal","M",null],["Sirbu Jan","M",null],["Mikulec Jiří","M",null]],"last":null},{"n":3,"name":"Gullivers - pincárna B","ab":"GP B","venue":"Božetěchova 97a","day":"čtvrtek","time":"17:30","gear":"","ball":"Bílá, DHS, Joola","players":[{"name":"Urubek Ondřej","phone":"606 904 480","mail":"urubek.ondrej@gmail.com","lead":true}],"roster":[["Urubek Ondřej","M",null],["Búlik Marek","M",null],["Oberlaiter Vigelm","M",null],["Svoboda Ondřej","M",null],["Byrtus David","M",null],["Colleone Fernando","M",null]],"last":null},{"n":4,"name":"Bosonohy A","ab":"Bosono A","venue":"Bosonohy, Pražská 55","day":"středa","time":"18:30","gear":"Artis, zelená, 2","ball":"DHS 40+ ***, plast, bílá","players":[{"name":"Konečná Tereza","phone":"732 166 173","mail":"rezka1@centrum.cz","lead":true}],"roster":[["Plšek Zdeněk","M",null],["Hořelka Martin","M",null],["Dohnálek Radim","M",null],["Stloukal Radomír","M",null],["Benovič Martin","M",null]],"last":null},{"n":5,"name":"Sokol Komín A","ab":"SK A","venue":"Svratecká 11, Sokolovna Komín","day":"pondělí","time":"15:20","gear":"Donic, zelená - 2-4 stoly","ball":"DHS 40+ ***, plast, bílá","players":[{"name":"Madron Stanislav","phone":"724 013 036","mail":"madron.stanislav@gmail.com","lead":true}],"roster":[["Madron Stanislav","M",null],["Schmidt Milan","M",null],["Bílek Jan","M",null],["Budínský Tadeáš","M",null]],"last":null},{"n":6,"name":"Orel Bohunice A","ab":"OB A","venue":"Orlovna, Hraničky 5, Bohunice, po 17:15","day":"pátek","time":"16:00","gear":"Stiga Elite Roller CSS zelený 25 mm 4ks","ball":"DHS 40+ ***, plast, bílá","players":[{"name":"Skurka Juraj","phone":"777 597 969","mail":"skurka@brnotron.cz","lead":true}],"roster":[["Skurka Juraj","M",null],["Vondrášek Tomáš","M",null],["Žaža Vladimír","M",null],["Musil Vladimír","M",null],["Zach Jaroslav","M",null],["Plevák Stanislav","M",null],["Krakovský Lubomír","M",null],["Novoměstský Zdeněk","M",null]],"last":null},{"n":7,"name":"FÉNIX B","ab":"FÉNIX B","venue":"Vojtova 12","day":"pondělí","time":"18:00","gear":"2 stoly","ball":"DHS 40+***, plast ,bílá","players":[{"name":"Buchta Stanislav","phone":"602 765 945","mail":"buchta.stanislav@seznam.cz","lead":true}],"roster":[["Buchta Stanislav","M",null],["Babák Petr","M",null],["Ryšavý Lubomír","M",null],["Vodák Petr","M",null],["Ryšavý Michal","M",null]],"last":null},{"n":8,"name":"Gullivers - pincárna A","ab":"GP A","venue":"Božetěchova 97a","day":"středa","time":"18:00","gear":"Butterfly, 2 stoly","ball":"Bílá, DHS, Joola","players":[{"name":"Stříteský Roman","phone":"724 859 643","mail":"socora@seznam.cz","lead":true}],"roster":[["Stříteský Roman","M",null],["Štourač Milan","M",null],["Riasnyi Artem","M",null],["Ziolkowski Lukasz","M",null],["Nykl Ondřej","M",null]],"last":null},{"n":9,"name":"ZES-magnetoterapie A","ab":"ZM A","venue":"Sladovnická 518/4, ZES Brno","day":"pondělí / pátek","time":"15:30","gear":"Zelená, 2","ball":"JOOLA FLASH, bílá","players":[{"name":"Lokaj Ladislav","phone":"606 499 792","mail":"llokaj@seznam.cz","lead":true}],"roster":[["Lokaj Ladislav","M",null],["Juras Jaroslav","M",null],["Hradil Petr","M",null],["Brož Jaroslav","M",null]],"last":null},{"n":10,"name":"Sokol Komín B","ab":"SK B","venue":"Svratecká 11, Sokolovna Komín","day":"pondělí","time":"15:20","gear":"Donic, zelená/2","ball":"DHS 40, bílá","players":[{"name":"Balák Roman","phone":"778 453 913","mail":"roman.balak72@seznam.cz","lead":true}],"roster":[["Balák Roman","M",null],["Šenkapoul Pavel","M",null],["Kouřil Petr","M",null],["Janoušek Václav","M",null],["Jareš Jiří","M",null],["Uhlíř Petr","M",null]],"last":null}],"2":[{"n":1,"name":"Orel Bohunice B","ab":"OB B","venue":"Bohunice, Orlovna Hraničky 5","day":"pondělí","time":"17:15/ pá 16:30","gear":"Stiga Elite Roller CSS/zelená/ 4","ball":"DHS 40+***, plast ,bílá","players":[{"name":"Krakovský Lubomír","phone":"603 313 140","mail":"krakovskyl@volny.cz","lead":true}],"roster":[["Krakovský Lubomír","M",null],["Musil Vladimír","M",null],["Zach Jaroslav","M",null],["Plevák Stanislav","M",null],["Musil Josef","M",null],["Kročil František","M",null],["Lapúník Michal","M",null],["Chytil Jakub","M",null]],"last":null},{"n":2,"name":"Orel Královo Pole A","ab":"OKP A","venue":"Poděbradova 5","day":"pondělí","time":"17:30","gear":"Stiga Elite Roller/zelený/1","ball":"DHS 40+ ***, plast, bílá","players":[{"name":"Vodica Luděk","phone":"603 332 897","mail":"lvodica@seznam.cz","lead":true}],"roster":[["Vodica Luděk","M",null],["Šedivý Květoslav","M",null],["Kozák Jan","M",null]],"last":null},{"n":3,"name":"Gullivers - pincárna C","ab":"GP C","venue":"Božetěchova 97a","day":"","time":"","gear":"Butterfly, šedá, 2","ball":"Bílá, DHS, Joola","players":[{"name":"Štullerová Barbora","phone":"606 450 835","mail":"barbora.stuller@gmail.com","lead":true}],"roster":[["Ziolkowski Lukasz","M",null],["Jelínek Tomáš","M",null],["Jalůvka Josef","M",null],["Polák Roman","M",null],["Bernard Ivo","M",null]],"last":null},{"n":4,"name":"ZPA A","ab":"ZPA A","venue":"Palackého tř. 158","day":"úterý / čtvrtek","time":"16:30 /dle dohody","gear":"","ball":"","players":[{"name":"Skříšovský Ervín","phone":"723 433 994","mail":"e.skrisovsky@zpabrno.cz","lead":true}],"roster":[["Vala Miroslav","M",null],["Gajda Zdeněk","M",null],["Lenikus Petr","M",null],["Skříšovský Ervín","M",null],["Maršálek Jiří","M",null],["Sedlák Pavel","M",null],["Skupa Jaroslav","M",null]],"last":null},{"n":5,"name":"ABBDATA A","ab":"ABBDAT A","venue":"Moravská Slávie Vojtova","day":"středa","time":"15:30","gear":"Butterfly Octet 25, zelená, 2 stoly","ball":"DHS Dual 40+***, bílá","players":[{"name":"Vedra Jan","phone":"724 102 138","mail":"vedra@email.cz","lead":true}],"roster":[["Vedra Jan","M",null],["Čoupek Miloslav","M",null],["Jalový Josef","M",null],["Freiberg Tomáš","M",null],["Staněk Jaroslav","M",null],["Brussmann Jan","M",null]],"last":null},{"n":6,"name":"PingPoint Slatina B","ab":"PS B","venue":"X-aréna, Tuřanka 55","day":"úterý","time":"17:00","gear":"Butterfly/modrá/2","ball":"DHS 40+***, plast ,bílá","players":[{"name":"Patočka Jan","phone":"604 104 263","mail":"patison@volny.cz","lead":true}],"roster":[["Antonín Petr","M",null],["Břenek Jiří, ml.","M",null],["Patočka Jan","M",null]],"last":null},{"n":7,"name":"Orel Královo Pole B","ab":"OKP B","venue":"Poděbradova 7 , Brno","day":"středa","time":"19:00","gear":"Stiga, zelené, 2","ball":"DHS *** bílá plast 40+","players":[{"name":"Švec Richard","phone":"720 544 294","mail":"risasvec@seznam.cz","lead":true}],"roster":[["Švec Richard","M",null],["Špinka Jiří","M",null],["Makiš Jiří","M",null],["Černoch Štěpán","M",null],["Bár Matěj","M",null],["Novák Josef","M",null]],"last":null},{"n":8,"name":"Gullivers - pincárna D","ab":"GP D","venue":"Božetěchova 97a","day":"","time":"","gear":"Butterfly, šedá, 2","ball":"Bílá, DHS, Joola","players":[{"name":"Svoboda Ondřej","phone":"728 005 856","mail":"bazael78@gmail.com","lead":true}],"roster":[["Svoboda Ondřej","M",null],["Byrtus David","M",null],["Colleone Fernando","M",null],["Nykl Ondřej","M",null],["Brožek Petr","M",null],["Světnica Zbyněk","M",null]],"last":null},{"n":9,"name":"Orel Obřany A","ab":"OO A","venue":"Orlovna, Hlaváčova 20","day":"úterý","time":"17:30","gear":"2 - zelená - Tibhar","ball":"DHS 40+ ***, plast bílá","players":[{"name":"Orel Marek","phone":"602 364 902","mail":"mar.orel@seznam.cz","lead":true}],"roster":[["Matysík Michal","M",null],["Orel Marek","M",null],["Padiyath Kishan","M",null],["Kolář Richard","M",null],["Metyš Jan","M",null],["Sláma Jiří","M",null]],"last":null},{"n":10,"name":"Povodí Moravy A","ab":"PM A","venue":"Dřevařská 11, Brno (Povodí Moravy)","day":"čtvrtek","time":"15:30","gear":"2, modrá-Stiga, zelená-Butterfly","ball":"DHS 40+ ***, plast bílá","players":[{"name":"Juračka Karel","phone":"731 665 895","mail":"klik8@seznam.cz","lead":true}],"roster":[["Zorník Vlastislav","M",null],["Ryšavý Josef","M",null],["Juračka Karel","M",null],["Juračka Petr","M",null]],"last":null}],"3":[{"n":1,"name":"BBB A","ab":"BBB A","venue":"Sokol Brno I, Kounicova 685/20, Brno","day":"pondělí","time":"18:30","gear":"2x Donic, zelená","ball":"Plast/bílá","players":[{"name":"Karásek Petr","phone":"608 877 312","mail":"darklord@atlas.cz","lead":true}],"roster":[["Pavlíček Jan","M",null],["Karásek Petr","M",null],["Bartoš Petr","M",null],["Toufar Zdeněk","M",null],["Kvarda Lubomír","M",null],["Kotas Radek","M",null],["Smejkal Radovan","M",null]],"last":null},{"n":2,"name":"FÉNIX C","ab":"FÉNIX C","venue":"Selesiánské stř., Foerstrova 1088/2","day":"čtvrtek","time":"18:30","gear":"2 - modrá - Artis Super","ball":"DHS D40+, bílá","players":[{"name":"Bukal Petr","phone":"723 793 063","mail":"petrbukal@seznam.cz","lead":true}],"roster":[["Bukal Petr","M",null],["Rybák Václav","M",null],["Nimráček Vladislav","M",null],["Pšenica Jan","M",null],["Martinek Karel","M",null]],"last":null},{"n":3,"name":"Dopravoprojekt A","ab":"Doprav A","venue":"Václavská 6","day":"pondělí / čtvrtek","time":"16:00","gear":"Modrá, 2","ball":"DHS 40+ ***, plast bílá","players":[{"name":"Zerák Martin","phone":"721 623 471","mail":"merkurs1@email.cz","lead":true}],"roster":[["Zerák Martin","M",null],["Novotný Lubor","M",null],["Kozel Michal","M",null],["Streit Roman","M",null],["Bartoš Antonín","M",null],["Teplý Karel","M",null]],"last":null},{"n":4,"name":"Orel Obřany B","ab":"OO B","venue":"Orlovna, Hlaváčova 20","day":"úterý","time":"17:00","gear":"2 - zelená - Tibhar","ball":"DHS 40+ ***, plast bílá","players":[{"name":"Kolář Richard","phone":"603 111 271","mail":"risa.kolar@gmail.com","lead":true}],"roster":[["Kolář Richard","M",null],["Sláma Jiří","M",null],["Metyš Jan","M",null],["Bartošek Lukáš","M",null],["Musil Jan","M",null],["Drápal Rostislav","M",null]],"last":null},{"n":5,"name":"SKP Kometa A","ab":"SK A","venue":"Bauerova 5, Brno","day":"čtvrtek","time":"16:30","gear":"Donic, modrá","ball":"DHS 40+ ***, plast bílá","players":[{"name":"Šoba Pavel","phone":"604 728 241","mail":"soba@seznam.cz","lead":true}],"roster":[["Šoba Pavel","M",null],["Herz Luboš","M",null],["Brauner Radek","M",null],["Pavlík Petr","M",null],["Rejman Stanislav","M",null],["Budík Miloš","M",null],["Sedláček Kamil","M",null],["Šperka Pavel","M",null]],"last":null},{"n":6,"name":"PingPoint Slatina C","ab":"PS C","venue":"Tuřanka 55, Slatina","day":"pondělí / čtvrtek","time":"16:00","gear":"Butterfly Octet 25,modrá, 2","ball":"Joola Flash ***, bílá","players":[{"name":"Just Radek","phone":"733 317 017","mail":"radekjust@seznam.cz","lead":true}],"roster":[["Štefanec Jakub","M",null],["Prokeš Jiří","M",null],["Just Radek","M",null],["Hodek Martin","M",null],["Vašín Michal","M",null],["Bílek Zdeněk","M",null]],"last":null},{"n":7,"name":"EVA A","ab":"EVA A","venue":"","day":"","time":"","gear":"","ball":"","players":[{"name":"Andrýsek Milan","phone":"724 981 224","mail":"milan.andrysek@email.cz","lead":true}],"roster":[["Andrýsek Milan","M",null],["Vedra Jiří","M",null],["Kudlička Petr","M",null],["Dohnal Bronislav","M",null],["Holáň Radim","M",null],["Šidla Marián","M",null]],"last":null},{"n":8,"name":"TJ Sokol Ořešín A","ab":"TSO A","venue":"Drozdí 6, Ořešín","day":"středa","time":"18:00","gear":"Sponeta/zelená 2 x","ball":"Tibhar 40+ ***, bílá","players":[{"name":"Holomek Milan","phone":"724 532 132","mail":"holomek@szutest.cz","lead":true}],"roster":[["Holomek Milan","M",null],["Špaček Adam","M",null],["Miklík Tomáš","M",null],["Dolejš Václav","M",null],["Boucník Petr","M",null]],"last":null},{"n":9,"name":"Bosonohy B","ab":"Bosono B","venue":"Orlovna, Pražská 55","day":"středa","time":"18:30","gear":"2 - zelená - Artis","ball":"DHS 40+ ***, plast bílá","players":[{"name":"Stloukal Radomír","phone":"604 349 204","mail":"rady.stl@seznam.cz","lead":true}],"roster":[["Stloukal Radomír","M",null],["Benovič Martin","M",null]],"last":null},{"n":10,"name":"ABBDATA B","ab":"ABBDAT B","venue":"Vojtova 12 (herna MS)","day":"středa","time":"15:30","gear":"Butterfly Octet 25, zelená, 2 stoly 2","ball":"DHS 40+ ***, plast bílá","players":[{"name":"Janovská Alena","phone":"607 629 941","mail":"alcaj@seznam.cz","lead":true}],"roster":[["Novotný Lubomír","M",null],["Staněk Jaroslav","M",null],["Baslík Jan","M",null],["Šindler Karel","M",null],["Krkavec Vladimír","M",null]],"last":null}],"4":[{"n":1,"name":"ÚFO A","ab":"ÚFO A","venue":"SK Slatina, Tuřanka 1","day":"středa","time":"16:00","gear":"Butterfly, zelená, 4","ball":"DHS 40+ ***, bílá","players":[{"name":"Opršal Jiří","phone":"723 193 917","mail":"opini@centrum.cz","lead":true}],"roster":[["Opršal Jiří","M",null],["Kopřiva Cyril","M",null],["Boleslav Rostislav","M",null],["Rýzner Čestmír","M",null],["Lázníček Jiří","M",null],["Kellner Miroslav","M",null],["Skočovský Roman","M",null]],"last":null},{"n":2,"name":"EVA B","ab":"EVA B","venue":"","day":"","time":"","gear":"","ball":"","players":[{"name":"Dohnal Bronislav","phone":"602 565 863","mail":"bronis@post.cz","lead":true}],"roster":[["Dohnal Bronislav","M",null],["Holáň Radim","M",null],["Šidla Marián","M",null],["Vaňatka Jaroslav","M",null],["Lola Josef","M",null],["Šenkyřík Martin","M",null],["Irsenský Pavel","M",null]],"last":null},{"n":3,"name":"ABBDATA C","ab":"ABBDAT C","venue":"Vojtova 12 (herna MS)","day":"pondělí","time":"15:30","gear":"Butterfly Octet 25, zelená, 2 stoly","ball":"DHS 40+ ***, plast bílá","players":[{"name":"Baslík Jan","phone":"723 003 060","mail":"j.baslik@email.cz","lead":true}],"roster":[["Šindler Karel","M",null],["Krkavec Vladimír","M",null],["Freiberg Tomáš","M",null],["Brussmann Jan","M",null],["Baslík Jan","M",null],["Janovský Jiří","M",null],["Vrba Jan","M",null],["Huráb Ivan","M",null]],"last":null},{"n":4,"name":"Bosonohy C","ab":"Bosono C","venue":"Pražská 55, Bosonohy","day":"středa","time":"18:15","gear":"Zelená, Artis, 2-3","ball":"DHS D40+***, bílá","players":[{"name":"Opatřil Jan","phone":"604 870 816","mail":"opatril@volny.cz","lead":true}],"roster":[["Opatřil Jan","M",null],["Kvasnica Roman","M",null],["Vencl Ondřej","M",null]],"last":null},{"n":5,"name":"Orel Obřany C","ab":"OO C","venue":"Hlaváčova 20","day":"pátek","time":"17:00","gear":"2 stoly, zelené, Tibhar, Donic","ball":"DHS D40+***, bílá","players":[{"name":"Bartošek Lukáš","phone":"723 783 460","mail":"bartoseklukas@seznam.cz","lead":true}],"roster":[["Bartošek Lukáš","M",null],["Musil Jan","M",null],["Drápal Rostislav","M",null],["Švihel Ladislav","M",null],["Jurčík Michal","M",null],["Fojt Leoš","M",null],["Oščatka Jiří","M",null]],"last":null},{"n":6,"name":"Cyklo Best A","ab":"CB A","venue":"Slatina, Tuřanka 1","day":"pátek","time":"16:00","gear":"Butterfly zelená, 4 stoly","ball":"DHS 40+ ***, plast bílá","players":[{"name":"Španěl Petr","phone":"603 441 735","mail":"petr.spanel@seznam.cz","lead":true}],"roster":[],"last":null},{"n":7,"name":"ZPA B","ab":"ZPA B","venue":"Palackého tř. 158","day":"středa","time":"16:00 / dle dohody","gear":"","ball":"","players":[{"name":"Sedlák Pavel","phone":"727 982 233","mail":"a.pavel.sedlak@seznam.cz","lead":true}],"roster":[["Dekan Jan","M",null],["Maršálek Jiří","M",null],["Hrabovský Miroslav","M",null],["Sedlák Pavel","M",null],["Skupa Jaroslav","M",null]],"last":null},{"n":8,"name":"PingPoint Slatina D","ab":"PS D","venue":"Tuřanka 55, dle dohody","day":"","time":"","gear":"Butterfly, modrý","ball":"DHS 40+ ***, plast bílá","players":[{"name":"Koudelka Robert","phone":"605 724 581","mail":"robkoudelka@seznam.cz","lead":true}],"roster":[["Koudelka Robert","M",null],["Pavlák Luděk","M",null],["Bílek Zdeněk","M",null],["Vašín Michal","M",null]],"last":null},{"n":9,"name":"Gullivers - pincárna E","ab":"GP E","venue":"Pincárna Božetěchova 97a, po/ st dle dohody","day":"","time":"","gear":"Butterfly, šedá, 2","ball":"Bílá, DHS, Joola","players":[{"name":"Brožek Petr","phone":"602 717 358","mail":"brozek.petr@post.cz","lead":true}],"roster":[],"last":null},{"n":10,"name":"Kloci z Hané A","ab":"KZH A","venue":"Tuřanka 55, Brno - Slatina","day":"úterý","time":"18:00","gear":"Butterfly Octet 25, 5 stolů, modrá","ball":"Joola bílý, Butterfly bílá","players":[{"name":"Škrabal Petr","phone":"739 079 661","mail":"maroko10@centrum.cz","lead":true}],"roster":[["Škrabal Petr","M",null],["Frehar Ivo","M",null],["Klos Martin","M",null],["Žaba Pavel","M",null],["Lhoták Jiří","M",null],["Móler Michal","M",null],["Stejskal Marek","M",null]],"last":null}],"5":[{"n":1,"name":"Orel Masaryk. čtvrť A","ab":"OMČ A","venue":"Draken, Kraví hora 1011/12, 1. patro","day":"čtvrtek","time":"18:00","gear":"Tibhar/modrá/1","ball":"DHS D40+***, bílá","players":[{"name":"Bílek Petr","phone":"776 397 639","mail":"petr.bilek.brno@volny.cz","lead":true}],"roster":[["Bílek Petr","M",null],["Bílek Bohumil","M",null],["Drlík Václav","M",null],["Crhán Jiří","M",null],["Kovács Peter","M",null]],"last":null},{"n":2,"name":"Orel Královo Pole C","ab":"OKP C","venue":"Poděbradova 5/7,Kr. Pole","day":"pátek","time":"16:45","gear":"Stiga, zelené, 2","ball":"DHS 40+ *** plast, bílá","players":[{"name":"Novák Josef","phone":"773 899 446","mail":"josefnovak145@gmail.com","lead":true}],"roster":[["Novák Josef","M",null],["Černoch Štěpán","M",null],["Bár Matěj","M",null],["Poláček Jiří","M",null],["Burkart Filip","M",null]],"last":null},{"n":3,"name":"Dopravoprojekt B","ab":"Doprav B","venue":"Vrchlického sad 3","day":"čtvrtek","time":"19:00","gear":"Donic, zelená, 2","ball":"DHS D40+***, bílá","players":[{"name":"Streit Roman","phone":"732 932 038","mail":"bon-sai@email.cz","lead":true}],"roster":[["Streit Roman","M",null],["Bartoš Antonín","M",null],["Teplý Karel","M",null]],"last":null},{"n":4,"name":"SKP Kometa B","ab":"SK B","venue":"Bauerova 5, Brno","day":"čtvrtek","time":"16:30","gear":"Donic Waldner, modrá, 2 stoly","ball":"DHS 40+ ***, plast bílá","players":[{"name":"Rejman Stanislav","phone":"723 999 744","mail":"stan@rejman.eu","lead":true}],"roster":[["Rejman Stanislav","M",null],["Budík Miloš","M",null],["Sedláček Kamil","M",null],["Šperka Pavel","M",null]],"last":null},{"n":5,"name":"VADÍ - NEVADÍ A","ab":"VN A","venue":"Út / čt od 18 hod","day":"","time":"","gear":"Siga, zelený, modrý","ball":"DHS 40+, plast, bílá","players":[{"name":"Vyletel Peter","phone":"603 800 815","mail":"petervyletel@gmail.com","lead":true}],"roster":[["Vyletel Peter","M",null],["Truhan Marek","M",null],["Chovanec Miloš","M",null],["Horký Vladimír","M",null]],"last":null},{"n":6,"name":"ÚFO B","ab":"ÚFO B","venue":"Tuřanka 1, herna SK Slatina","day":"středa","time":"16:00","gear":"Butterfly, zelená","ball":"DHS 40+ ***, plast bílá","players":[{"name":"Rýzner Čestmír","phone":"603 229 211","mail":"cestmirryzner@seznam.cz","lead":true}],"roster":[["Rýzner Čestmír","M",null],["Lázníček Jiří","M",null],["Kellner Miroslav","M",null],["Skočovský Roman","M",null]],"last":null},{"n":7,"name":"FÉNIX D","ab":"FÉNIX D","venue":"Foerstrova 2, U Selesiánů","day":"pondělí","time":"18:30","gear":"2, modrá, Artis Super","ball":"DHS Dual 40+ ***","players":[{"name":"Pšenica Jan","phone":"737 589 444","mail":"jpsenda16@gmail.com","lead":true}],"roster":[["Pšenica Jan","M",null],["Nimráček Vladislav","M",null],["Martinek Karel","M",null],["Joukl Aleš","M",null]],"last":null},{"n":8,"name":"Hraví Hroši A","ab":"HH A","venue":"Stř. škola zdr., Lipová 18, Brno","day":"pondělí","time":"17:15","gear":"2","ball":"40+ ***, bílá","players":[{"name":"Parák Dominik","phone":"723 110 249","mail":"dompar@post.cz","lead":true}],"roster":[["Parák Dominik","M",null],["Dobrovolný Jiří","M",null],["Mikulica Jaromír","M",null],["Doupovec Martin","M",null],["Vorel Pavel, II.","M",null],["Babák Zdeněk","M",null]],"last":null},{"n":9,"name":"Beer Brothers A","ab":"BB A","venue":"Vrchlického sad 3, Lužánky","day":"středa","time":"18:00","gear":"Zelená, 2","ball":"DHS 40+ ***, plast bílá","players":[{"name":"Tůma Jiří","phone":"724 317 198","mail":"jiri.tuma@email.cz","lead":true}],"roster":[["Tůma Jiří","M",null],["Veselý Otakar","M",null],["Polyák Ondřej","M",null],["Holub Michal","M",null]],"last":null},{"n":10,"name":"Gullivers - pincárna F","ab":"GP F","venue":"Pincárna","day":"středa / čtvrtek","time":"17:00","gear":"Butterfly, šedá, 2","ball":"Bílá, DHS, Joola","players":[{"name":"Vintr Michal","phone":"604 802 404","mail":"michal.vintr@gmail.com","lead":true}],"roster":[["Vintr Michal","M",null],["Vokálek Václav","M",null],["Holoubek František","M",null],["Caletka Michal","M",null],["Mittal Shubhang","M",null],["Šenkýř David","M",null]],"last":null}],"7":[{"n":1,"name":"LINIOPLAN A","ab":"LINIOP A","venue":"Koláčkova 17, vchod z ul.Sibiřská","day":"středa","time":"17:30","gear":"Zelená, 2","ball":"DHS D40+***, bílá","players":[{"name":"Kokorský František","phone":"733 595 184","mail":"frantisek.kokorsky@linioplan.cz","lead":true}],"roster":[["Kokorský František","M",null],["Vacek Martin","M",null],["Sedláček Luboš","M",null]],"last":null},{"n":2,"name":"Gullivers - pincárna G","ab":"GP G","venue":"Pincárna, Božetěchova 2843/97a, Kr. Pole","day":"","time":"","gear":"8","ball":"Bílá, DHS, Joola","players":[{"name":"Zálešák Radko, st.","phone":"777 210 938","mail":"jdzalesak@atlas.cz","lead":true}],"roster":[["Bauer Emil","M",null],["Zálešák Radko, st.","M",null],["Vaníček Karel","M",null],["Zálešák Borek","M",null],["Kustra Kamil","M",null]],"last":null},{"n":3,"name":"Skaut-kompas.cz A","ab":"SK A","venue":"Pincárna, Božetěchova 97a","day":"","time":"","gear":"2 stoly, modrá","ball":"DHS D40+***, bílá","players":[{"name":"Procházka Jakub","phone":"739 234 442","mail":"jak.prochazka@seznam.cz","lead":true}],"roster":[["Procházka Jakub","M",null],["Hofírek Jiří","M",null],["Zatloukal Artur","M",null],["Kopecký Jiří","M",null],["Pokorný Martin","M",null],["Lorenc Tomáš","M",null],["Hrdina Jiří","M",null]],"last":null},{"n":4,"name":"Orel Židenice A","ab":"OŽ A","venue":"Slatinská 47a, Juliánov","day":"čtvrtek","time":"18:30","gear":"Butterfly, zelená, 2","ball":"DHS 40+, bílá","players":[{"name":"Hrčka Pavel","phone":"728 604 854","mail":"pavel.hrcka@email.cz","lead":true}],"roster":[["Hrčka Pavel","M",null],["Hampl Josef","M",null],["Buršík Petr","M",null]],"last":null},{"n":5,"name":"Orel Obřany D","ab":"OO D","venue":"Hlaváčova 20","day":"pátek","time":"17:00","gear":"Tibhar, Donic, zelená, 2","ball":"DHS D40+***, bílá","players":[{"name":"Fojt Leoš","phone":"775 111 505","mail":"fojtl@seznam.cz","lead":true}],"roster":[["Fojt Leoš","M",null],["Jurčík Michal","M",null],["Švihel Ladislav","M",null],["Oščatka Jiří","M",null],["Jedlička Milan","M",null]],"last":null},{"n":6,"name":"BBB B","ab":"BBB B","venue":"Sokol Brno I, Kounicova 685/20, Brno","day":"pondělí","time":"18:30","gear":"2x Donic, zelená","ball":"Bílá","players":[{"name":"Kotas Radek","phone":"604 561 966","mail":"kotasradek@seznam.cz","lead":true}],"roster":[["Kotas Radek","M",null],["Smejkal Radovan","M",null],["Kvarda Lubomír","M",null],["Mikulášek Libor","M",null]],"last":null},{"n":7,"name":"EVA C","ab":"EVA C","venue":"","day":"","time":"","gear":"","ball":"","players":[{"name":"Lola Josef","phone":"723 318 471","mail":"josef.lola@email.cz","lead":true}],"roster":[["Lola Josef","M",null],["Šenkyřík Martin","M",null],["Vaňatka Jaroslav","M",null],["Irsenský Pavel","M",null]],"last":null},{"n":8,"name":"Dopravoprojekt C","ab":"Doprav C","venue":"Tuřanka 55, Slatina","day":"čtvrtek","time":"18:30","gear":"Donic, zelená, 2","ball":"DHS 40+, plast, bílá","players":[{"name":"Vašíček Marek","phone":"603 153 112","mail":"marek.vasicek@mcomputers.cz","lead":true}],"roster":[["Vlček Aleš","M",null],["Vašíček Marek","M",null],["Konečný David","M",null],["Beňo Radovan","M",null],["Mahdal Oldřich","M",null]],"last":null},{"n":9,"name":"Gullivers - pincárna H","ab":"GP H","venue":"Pincárna, Božetěchova 97a","day":"čtvrtek","time":"18:00","gear":"Modré, 2","ball":"Různá, plast bílá","players":[{"name":"Dvořák Jan","phone":"732 707 965","mail":"mulat@centrum.cz","lead":true}],"roster":[["Apazoglou Theodoros","M",null],["Dvořák Jan","M",null],["Šenkýř David","M",null],["Mandilas Adriano","M",null]],"last":null}]};
+Object.values(OTHER_LEAGUES).forEach(a=>a.forEach(t=>{ t.roster=(t.roster||[]).map(r=>({name:r[0],sex:r[1],wl:r[2]||null})); if(t.last===undefined)t.last=null; }));
+const LEAGUE_TEAMS = Object.assign({6:L6_TEAMS}, OTHER_LEAGUES);
+const LEAGUES_LIST = [1,2,3,4,5,6,7];
+const LEAGUE_NAMES = {1:'1. liga',2:'2. liga',3:'3. liga',4:'4. liga',5:'5. liga',6:'6. liga',7:'7. liga'};
+
+/* ===== AUTO:CURRENT:START — přepisuje GitHub Action (scripts/update_current.py). Klíč = číslo ligy. ===== */
+const CURRENT_ALL = {};
 /* ===== AUTO:CURRENT:END ===== */
-TEAMS.forEach(t=>{
-  t.cur = (CURRENT && CURRENT.teams && CURRENT.teams[t.n]) || null;
-  const pc = (CURRENT && CURRENT.players && CURRENT.players[t.n]) || {};
-  t.roster.forEach(p=>{ p.curwl = pc[p.name] || null; });
-});
-const T = {}; TEAMS.forEach(t=>T[t.n]=t);
+
+// aktivní liga + její týmy (přepíná se výběrem ligy)
+let league=0, TEAMS=[], T={}, CURRENT={teams:{},players:{},results:{}};
+function attachLeague(lg){
+  league=lg;
+  TEAMS=LEAGUE_TEAMS[lg]||[];
+  T={}; TEAMS.forEach(t=>T[t.n]=t);
+  CURRENT=(CURRENT_ALL&&CURRENT_ALL[lg])||{teams:{},players:{},results:{}};
+  TEAMS.forEach(t=>{
+    t.cur=(CURRENT.teams&&CURRENT.teams[t.n])||null;
+    const pc=(CURRENT.players&&CURRENT.players[t.n])||{};
+    t.roster.forEach(p=>{ p.curwl=pc[p.name]||null; });
+  });
+}
 // výsledek zápasu daného týmu v daném kole (z naskrapovaných dat) – z pohledu týmu
 function getResult(round, team){
   const rr = (CURRENT && CURRENT.results) ? CURRENT.results[round] : null;
@@ -517,6 +532,8 @@ function contact(kind,val){
   const href=kind==='tel'?'tel:'+bare:'mailto:'+val;
   return `<a href="${href}">${val}</a><button class="cpy" type="button" title="Zkopírovat" aria-label="Zkopírovat" onclick="copyVal(this,'${bare}')">${IC.copy}</button>`;
 }
+function ldr(team,bold){const p=team.players&&team.players[0]; if(!p) return '—'; const nm=bold?`<b>${p.name}</b>`:p.name;
+  const c=[]; if(p.phone) c.push(contact('tel',p.phone)); if(p.mail) c.push(contact('mail',p.mail)); return [nm].concat(c).join(' · ');}
 function fallbackCopy(text){try{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');document.body.removeChild(ta);}catch(e){}}
 function copyVal(btn,text){
   const ok=()=>{btn.innerHTML=IC.check;btn.classList.add('ok');setTimeout(()=>{btn.innerHTML=IC.copy;btn.classList.remove('ok');},1100);};
@@ -586,7 +603,7 @@ function terminPlain(day,time,s,e){return terminStr(day,time,s,e,true);}
 
 /* ---- ručně upravitelná pole (termín / herna), ukládaná do localStorage ---- */
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function editKey(round,field){return 'edit6liga_'+myTeam+'_'+round+'_'+field;}
+function editKey(round,field){return 'edit6liga_'+league+'_'+myTeam+'_'+round+'_'+field;}
 function getEdit(round,field){return localStorage.getItem(editKey(round,field));}
 function editField(round,field,origPlain,origHtml){
   const custom=getEdit(round,field);
@@ -642,9 +659,26 @@ function togglePlayed(round,cb){
 function applyTeamColor(){document.documentElement.style.setProperty('--team', myTeam?tc(myTeam):'#ff5a3c');}
 
 /* ---------- CONTROLS ---------- */
+const leagueSel=document.getElementById('leagueSel');
+LEAGUES_LIST.forEach(lg=>{const o=document.createElement('option');o.value=lg;o.textContent=LEAGUE_NAMES[lg];leagueSel.appendChild(o);});
 const sel=document.getElementById('teamSel');
-TEAMS.forEach(t=>{const o=document.createElement('option');o.value=t.n;o.textContent=t.n+'. '+t.name;sel.appendChild(o);});
-sel.value=myTeam||'';
+function fillTeamSelect(){
+  sel.innerHTML='<option value="">— vyber tým —</option>';
+  (LEAGUE_TEAMS[league]||[]).forEach(t=>{const o=document.createElement('option');o.value=t.n;o.textContent=t.n+'. '+t.name;sel.appendChild(o);});
+  sel.disabled=!league; sel.value=myTeam||'';
+}
+league=Number(localStorage.getItem('league6liga'))||0;
+if(league && LEAGUE_TEAMS[league]) attachLeague(league); else league=0;
+if(!league || !T[myTeam]) myTeam=0;
+leagueSel.value=league||'';
+fillTeamSelect();
+leagueSel.onchange=()=>{
+  league=Number(leagueSel.value)||0;
+  localStorage.setItem('league6liga',league||'');
+  if(league) attachLeague(league); else { TEAMS=[]; T={}; }
+  myTeam=0; localStorage.setItem('myTeam6liga','');
+  fillTeamSelect(); renderAll();
+};
 sel.onchange=()=>{myTeam=Number(sel.value)||0;localStorage.setItem('myTeam6liga',myTeam);renderAll();};
 const refInp=document.getElementById('refDate');
 refInp.value=toISO(refDate);
@@ -671,12 +705,15 @@ document.querySelectorAll('nav.tabs button').forEach(b=>{
 /* ---------- HERO ---------- */
 function renderHero(){
   const w=document.getElementById('heroWrap');
-  if(!myTeam){ w.innerHTML='<div class="empty"><span class="ball"></span><b>Vyber si svůj tým</b>Nahoře v hlavičce — a uvidíš svůj rozpis zápasů týden po týdnu, laděný do barev tvého týmu.</div>'; return; }
+  if(!myTeam){ w.innerHTML='<div class="empty"><span class="ball"></span><b>'+(league?'Vyber si svůj tým':'Vyber ligu a tým')+'</b>Nahoře v hlavičce — a uvidíš svůj rozpis zápasů týden po týdnu, laděný do barev tvého týmu.</div>'; return; }
   const t=T[myTeam];
   const now=today0();
   let nextHtml='';
   const upcoming=WEEKS.filter(w=>w.type==='round'&&pd(w.e)>=now);
-  if(upcoming.length){
+  if(upcoming.length && !T[myMatch(myTeam,upcoming[0].round).opp]){
+    const nw=upcoming[0];
+    nextHtml=`<div class="next"><div class="nx-lbl">Nejbližší kolo</div><div class="nx-main">Volný los (bye)</div><div class="nx-meta">${nw.round}. kolo · ${fmtRange(nw.s,nw.e)}</div></div>`;
+  } else if(upcoming.length){
     const nw=upcoming[0];const m=myMatch(myTeam,nw.round);const opp=T[m.opp];
     const where=m.home?t.venue:opp.venue;
     const nday=m.home?t.day:opp.day, ntime=m.home?t.time:opp.time;
@@ -691,7 +728,7 @@ function renderHero(){
     <div class="heroball"></div>
     <div class="hz">
       <p class="name">${t.name}</p>
-      <div class="sub">Vedoucí: <b>${t.players[0].name}</b> · ${contact('tel',t.players[0].phone)} · ${contact('mail',t.players[0].mail)}</div>
+      <div class="sub">Vedoucí: ${ldr(t,true)}</div>
       <div class="facts">
         <div><span class="lab">Hřiště</span><span>${t.venue}</span></div>
         <div><span class="lab">Hrací den</span><span>${t.day}</span></div>
@@ -709,7 +746,7 @@ function renderTimeline(){
   const pt=document.getElementById('printTitle');
   if(!myTeam){ box.innerHTML=''; pt.textContent=''; return; }
   const t=T[myTeam];
-  pt.textContent='6. liga 2026/27 — '+t.name+' — termínový plán';
+  pt.textContent=LEAGUE_NAMES[league]+' 2026/27 — '+t.name+' — termínový plán';
   let nowIdx=WEEKS.findIndex(w=>pd(w.e)>=refDate);
   const seasonOver=nowIdx===-1, beforeStart=pd(WEEKS[0].s)>refDate;
   let col1='', col2='', half2=false;
@@ -725,7 +762,11 @@ function renderTimeline(){
     }
     const isCur=i===nowIdx, isNext=i===nowIdx+1;
     const curCls=isCur?'cur':'';
-    if(w.type==='round'){
+    if(w.type==='round' && !T[myMatch(myTeam,w.round).opp]){
+      // volný los (bye) – v lize chybí soupeř s tímto číslem (např. 9 týmů)
+      if(w.round===10) half2=true;
+      chunk+=`<div class="tl-row"><div class="tl-date">${fmtRange(w.s,w.e)}</div><div class="tl-axis"><div class="dot nt"></div></div><div class="tl-card slim"><div class="r1">${w.round}. kolo · <b>volný los (bye)</b></div><div class="r2">v tomto kole tvůj tým nehraje</div></div></div>`;
+    } else if(w.type==='round'){
       if(w.round===10) half2=true;
       const m=myMatch(myTeam,w.round);const opp=T[m.opp];const oc=tc(opp.n);
       const where=m.home?t.venue:opp.venue;
@@ -755,7 +796,7 @@ function renderTimeline(){
           <div class="infogrid">
             <div class="info">${IC.pin}<span>${editField(w.round,'venue',where,where)}</span></div>
             <div class="info">${IC.clock}<span>${editField(w.round,'termin',terminPlain(day,time,w.s,w.e),terminHtml(day,time,w.s,w.e))}</span></div>
-            <div class="info">${IC.user}<span>${opp.players[0].name} · ${contact('tel',opp.players[0].phone)} · ${contact('mail',opp.players[0].mail)}</span></div>
+            <div class="info">${IC.user}<span>${ldr(opp,false)}</span></div>
             ${m.home?`<div class="info alt">${IC.home}<span>Soupeř hraje doma: ${opp.day} · ${opp.time} · ${opp.venue}</span></div>`:''}
           </div>
           <div class="roster-line">${IC.squad}<span class="rlist">${opp.roster.map(p=>`<span class="rp">${sexIco(p.sex)}${p.name}${wlHtml(p)}</span>`).join('')}</span></div>
@@ -783,6 +824,7 @@ function renderTimeline(){
 
 /* ---------- DRAW ---------- */
 function renderDraw(){
+  if(!league){ document.getElementById('drawTbl').innerHTML='<div class="legend" style="padding:26px;text-align:center">Vyber ligu nahoře v hlavičce.</div>'; return; }
   const now=today0();
   let curRound=0;const uw=WEEKS.find(w=>w.type==='round'&&pd(w.e)>=now);if(uw)curRound=uw.round;
   let rows='';
@@ -790,7 +832,8 @@ function renderDraw(){
     const half=r<=9?'I':'II';
     const cells=pairsForRound(r).map(([h,a])=>{
       const mine=(h===myTeam||a===myTeam);
-      return `<td class="${mine?'mh':''}"><span class="tm" style="--pc:${tc(h)}">${T[h].ab}</span><span class="dash">–</span><span class="tm" style="--pc:${tc(a)}">${T[a].ab}</span></td>`;
+      const ha=T[h]?T[h].ab:'—', aa=T[a]?T[a].ab:'—';
+      return `<td class="${mine?'mh':''}"><span class="tm" style="--pc:${tc(h)}">${ha}</span><span class="dash">–</span><span class="tm" style="--pc:${tc(a)}">${aa}</span></td>`;
     }).join('');
     rows+=`<tr class="rr ${r===curRound?'currow':''}"><td><b>${r}.</b><br><span style="font-size:10px;color:var(--muted)">${half}. pol.</span></td>${cells}</tr>`;
   }
@@ -802,6 +845,7 @@ function renderDraw(){
 
 /* ---------- TEAMS ---------- */
 function renderTeams(){
+  if(!league){ document.getElementById('teamGrid').innerHTML='<div class="empty" style="grid-column:1/-1"><b>Vyber ligu</b>Nahoře v hlavičce a uvidíš všechna družstva v dané lize.</div>'; return; }
   document.getElementById('teamGrid').innerHTML=TEAMS.map(t=>`
     <div class="tcard ${t.n===myTeam?'me':''}" style="--tc:${tc(t.n)}">
       <div class="tn"><div><h3>${t.name}</h3><div class="ab">${t.ab}</div></div></div>
@@ -819,8 +863,9 @@ function renderTeams(){
 }
 
 document.getElementById('genderLegend').innerHTML=`${sexIco('M')} muž &nbsp; ${sexIco('Z')} žena &nbsp;·&nbsp; bilance <b class="w">V</b>–<b class="l">P</b>: letos <span style="opacity:.7">(loni)</span>`;
-function renderAll(){applyTeamColor();renderHero();renderTimeline();renderDraw();renderTeams();}
-document.getElementById('foot').innerHTML='Aktuální tabulka: '+(CURRENT&&CURRENT.updated?CURRENT.updated:'—')+'<br>Zdroj: Los_kalendar_adresar_6_liga_2026-2027_FINAL.xlsx · soupisky a tabulky pinec.info · Za STK: Ing. Anna Babjaková · 604 509 449 · ab2007ab@gmail.com';
+function renderAll(){applyTeamColor();renderHero();renderTimeline();renderDraw();renderTeams();renderFoot();}
+function renderFoot(){document.getElementById('foot').innerHTML='Aktuální data: '+(CURRENT&&CURRENT.updated?CURRENT.updated:'—')+'<br>Soupisky a tabulky: pinec.info · rozlosování a čísla týmů: brestpin.cz · Za STK: Ing. Anna Babjaková · 604 509 449 · ab2007ab@gmail.com';}
+renderFoot();
 renderAll();
 </script>
 </body>
