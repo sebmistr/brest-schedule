@@ -58,6 +58,10 @@
   .spacer{flex:1}
   .pick{display:flex;align-items:center;gap:8px}
   .pick label{font-size:12px;color:var(--muted);font-weight:600}
+  .bar .pick-toggle{display:none}                   /* jen na mobilu (viz @media); .bar kvůli přebití .btn */
+  .pick-toggle .chev{flex:none;font-size:11px;opacity:.6;transition:transform .2s}
+  .bar.picks-open .pick-toggle .chev{transform:rotate(180deg)}
+  #pickSummary{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;font-weight:600}
   select,input[type=date],.btn{
     font:inherit;font-size:13.5px;padding:9px 13px;border:1px solid var(--line);border-radius:11px;
     background:var(--surf2);color:var(--ink);cursor:pointer;transition:border-color .2s,background .2s}
@@ -314,7 +318,10 @@
     .brand .ball{width:22px;height:22px}
     .brand>div{font-size:16px}
     #themeBtn{order:2}
-    .pick{flex:1 1 100%;min-width:0;gap:7px;order:3}   /* každý select na celou šířku, pod sebou */
+    /* sbalovací lišta se souhrnem volby; selecty pod ní jen když je rozbaleno */
+    .bar .pick-toggle{display:flex;order:3;flex:1 1 100%;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+    .pick{flex:1 1 100%;min-width:0;gap:7px;order:4;display:none}
+    .bar.picks-open .pick{display:flex}
     .pick label{flex:none;width:54px}                  /* zarovnané levé hrany selectů */
     select{flex:1;min-width:0}
     input[type=date]{max-width:100%}
@@ -366,6 +373,7 @@
   <div class="bar">
     <div class="brand"><span class="ball" aria-hidden="true"></span><div>BREST · stolní tenis<small>Los &amp; termínový kalendář — 2026/27 — Brno</small></div></div>
     <div class="spacer"></div>
+    <button id="pickToggle" class="btn pick-toggle" aria-expanded="true" aria-controls="leagueSel teamSel" title="Zobrazit / skrýt výběr ligy a týmu"><span id="pickSummary"></span><span class="chev" aria-hidden="true">▾</span></button>
     <div class="pick"><label for="leagueSel">Liga</label><select id="leagueSel"><option value="">— vyber ligu —</option></select></div>
     <div class="pick"><label for="teamSel">Můj tým</label><select id="teamSel" disabled><option value="">— vyber tým —</option></select></div>
     <button id="themeBtn" class="btn iconbtn" title="Přepnout světlý / tmavý režim"></button>
@@ -674,14 +682,29 @@ if(league && LEAGUE_TEAMS[league]) attachLeague(league); else league=0;
 if(!league || !T[myTeam]) myTeam=0;
 leagueSel.value=league||'';
 fillTeamSelect();
+
+/* sbalování výběru (mobil): lišta se souhrnem, po výběru týmu se sbalí */
+const pickToggle=document.getElementById('pickToggle'), pickSummary=document.getElementById('pickSummary'), bar=document.querySelector('.bar');
+const _ps=localStorage.getItem('picksOpen6liga');
+let picksOpen = _ps===null ? !myTeam : _ps==='1';   // bez uložené volby: otevřeno dokud není tým
+function updatePickSummary(){ pickSummary.textContent=(league?LEAGUE_NAMES[league]:'—')+' · '+(myTeam&&T[myTeam]?T[myTeam].name:'vyber tým'); }
+function applyPicks(){ bar.classList.toggle('picks-open',picksOpen); pickToggle.setAttribute('aria-expanded',picksOpen?'true':'false'); updatePickSummary(); }
+function setPicksOpen(v){ picksOpen=v; localStorage.setItem('picksOpen6liga',v?'1':'0'); applyPicks(); }
+pickToggle.onclick=()=>setPicksOpen(!picksOpen);
+applyPicks();
+
 leagueSel.onchange=()=>{
   league=Number(leagueSel.value)||0;
   localStorage.setItem('league6liga',league||'');
   if(league) attachLeague(league); else { TEAMS=[]; T={}; }
   myTeam=0; localStorage.setItem('myTeam6liga','');
   fillTeamSelect(); renderAll();
+  setPicksOpen(true);          // po změně ligy zůstat otevřené (je potřeba vybrat tým)
 };
-sel.onchange=()=>{myTeam=Number(sel.value)||0;localStorage.setItem('myTeam6liga',myTeam);renderAll();};
+sel.onchange=()=>{
+  myTeam=Number(sel.value)||0; localStorage.setItem('myTeam6liga',myTeam); renderAll();
+  if(myTeam) setPicksOpen(false); else applyPicks();   // po výběru týmu sbalit
+};
 const refInp=document.getElementById('refDate');
 refInp.value=toISO(refDate);
 refInp.onchange=()=>{refDate=refInp.value?pd(refInp.value):today0();renderTimeline();};
