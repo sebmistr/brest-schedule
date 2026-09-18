@@ -19,11 +19,12 @@ import subprocess, re, os, json, sys, unicodedata, difflib
 from datetime import datetime, timezone
 
 # LETOS soutěže (= i soupisky) podle LINKS.txt
-SOUTEZ = {"1": "8328", "2": "8329", "3": "8330", "4": "8331", "5": "8332", "6": "8333", "7": "8334"}
+SOUTEZ = {"1": "8328", "2": "8329", "3": "8330", "4": "8331", "5": "8332", "6": "8333", "7": "8334", "8": "8335"}
 INDEX = os.path.join(os.path.dirname(__file__), "..", "index.html")
 
 def sh(cmd):
-    return subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    return subprocess.run(cmd, shell=True, capture_output=True, text=True,
+                          encoding='utf-8', errors='replace')
 
 def norm(s):
     s = unicodedata.normalize('NFKD', s)
@@ -121,6 +122,12 @@ def fetch_pdf(kind, soutez):
         return None
     return sh(f'pdftotext -enc UTF-8 -layout {tag}.pdf -').stdout
 
+def fetch_html(kind, soutez):
+    """Vrátí HTML stránky (rozpis/tabulka). Rozpis HTML je spolehlivý i pro 9týmové ligy
+    (PDF u lig s volným losem posouvá sloupec domácích) a obsahuje skóre i sety."""
+    page = sh(f'curl -s -m 60 -A "Mozilla/5.0" "https://www.pinec.info/htm/{kind}/?soutez={soutez}"').stdout
+    return page if page and 'kolo stupně' in page else None
+
 def parse_tabulka(text, aliases, roster, names):
     teams, players = {}, {}
     alist = sorted(aliases.keys(), key=len, reverse=True)
@@ -151,29 +158,34 @@ def parse_tabulka(text, aliases, roster, names):
                 teams[str(tn)] = {"pos": int(pos), "w": int(V), "d": int(R), "l": int(P)}
     return teams, players
 
-def parse_results(text, aliases, names):
+def parse_results_html(page, aliases, names):
+    """Naparsuje výsledky z HTML rozpisu. Řádek zápasu má dva odkazy na mužstva
+    (domácí, hosté) a buňku výsledku '<a>skóre</a>sety'. Volný los má jen 1 odkaz."""
+    import html as _html
     alist = sorted(aliases.keys(), key=len, reverse=True)
     results, rnd = {}, None
-    for line in text.splitlines():
-        h = RND.search(line)
-        if h:
-            rnd = int(h.group(1)); continue
-        if rnd is None:
+    for row in re.findall(r'<tr>(.*?)</tr>', page, re.S):
+        hm = re.search(r'(\d+)\.\s*kolo stupně', row)
+        if hm:
+            rnd = int(hm.group(1)); continue
+        if rnd is None or '<td class="c w30">' not in row:
             continue
-        m = ROW.match(line)
-        if not m:
+        teams = [_html.unescape(t.strip()) for t in re.findall(r'muzstvo=\d+">([^<]+)</a>', row)]
+        if len(teams) != 2:
+            continue  # volný los / neúplné
+        rc = re.search(r'<td class="c w60">(.*?)</td>', row, re.S)
+        if not rc:
             continue
-        ha, sc_h, sc_a, se_h, se_a = m.groups()
-        nt = norm(ha)
-        home = away = None
-        for a in alist:
-            if nt.endswith(' ' + a):
-                away = aliases[a]
-                home = match_team(nt[:len(nt) - len(a)].strip(), aliases, alist, names)
-                break
+        sc = re.search(r'>\s*(\d+)\s*:\s*(\d+)\s*</a>', rc.group(1))
+        se = re.search(r'</a>\s*(\d+)\s*:\s*(\d+)', rc.group(1))
+        if not sc or not se:
+            continue  # zatím neodehráno
+        home = match_team(norm(teams[0]), aliases, alist, names)
+        away = match_team(norm(teams[1]), aliases, alist, names)
         if home and away:
             results.setdefault(str(rnd), {})[str(home)] = {
-                "a": away, "sc": [int(sc_h), int(sc_a)], "se": [int(se_h), int(se_a)]}
+                "a": away, "sc": [int(sc.group(1)), int(sc.group(2))],
+                "se": [int(se.group(1)), int(se.group(2))]}
     return results
 
 def now_str():
@@ -198,8 +210,8 @@ def scrape_league(lg, team_alias, roster, names):
     if len(teams) == 0:
         print(f"  0 týmů — ligu {lg} přeskakuji (chráním poslední data).")
         return None
-    rtext = fetch_pdf("rozpis", SOUTEZ[lg])
-    results = parse_results(rtext, aliases, nm) if rtext is not None else None
+    rhtml = fetch_html("rozpis", SOUTEZ[lg])
+    results = parse_results_html(rhtml, aliases, nm) if rhtml is not None else None
     print(f"  liga {lg}: {len(teams)} týmů, {sum(len(v) for v in players.values())} hráčů, "
           f"{'—' if results is None else sum(len(v) for v in results.values())} zápasů")
     return {"teams": teams, "players": players, "results": results}
