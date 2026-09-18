@@ -149,6 +149,7 @@
   .rslt.win .sc{color:color-mix(in srgb,var(--win) var(--tp),#000)}
   .rslt.loss .sc{color:color-mix(in srgb,var(--loss) var(--tp),#000)}
   .rslt.draw .sc{color:var(--ink)}
+  .rslt .sc .cln{color:var(--muted);font-weight:700;margin:0 1px}   /* dvojtečku nebarvit */
   .dot.done{background:var(--muted);box-shadow:none}
   .mcard.played{cursor:pointer}
   .mcard.played::after{content:"";position:absolute;left:50%;transform:translateX(-50%);bottom:6px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--muted);opacity:.5;transition:transform .15s}
@@ -804,7 +805,7 @@ function renderTimeline(){
       const res=getResult(w.round,myTeam);
       const oc2=res?(res.us>res.them?'win':(res.us<res.them?'loss':'draw')):'';
       const outLbl=oc2==='win'?'výhra':(oc2==='loss'?'prohra':'remíza');
-      const rsltHtml=res?`<span class="rslt ${oc2}"><span class="sc">${res.us}:${res.them}</span><span class="st">sety ${res.usS}:${res.themS}</span></span>`:'';
+      const rsltHtml=res?`<span class="rslt ${oc2}"><span class="sc">${res.us}<span class="cln">:</span>${res.them}</span><span class="st">sety ${res.usS}:${res.themS}</span></span>`:'';
       const badge=res?`<span class="rbadge ${oc2}">${outLbl}</span>`
         :`${isCur?'<span class="flag">tento týden</span>':''}${isNext?'<span class="flag">příští týden</span>':''}`;
       chunk+=`<div class="tl-row ${isCur?'cur':''}" style="--oc:${oc}">
