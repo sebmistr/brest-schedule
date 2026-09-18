@@ -308,13 +308,14 @@
     nav.tabs button{padding:12px 11px;font-size:13.5px}
     .foot{padding:0 14px 40px}
 
-    /* hlavička na dva řádky: značka nahoře, výběr + přepínač pod ní */
+    /* hlavička: značka + přepínač na 1. řádku, selecty liga/tým pod sebou */
     .spacer{display:none}
-    .brand{flex:1 1 100%}
+    .brand{flex:1 1 auto;order:1}
     .brand .ball{width:22px;height:22px}
     .brand>div{font-size:16px}
-    .pick{flex:1;min-width:0;gap:7px}
-    .pick label{flex:none}
+    #themeBtn{order:2}
+    .pick{flex:1 1 100%;min-width:0;gap:7px;order:3}   /* každý select na celou šířku, pod sebou */
+    .pick label{flex:none;width:54px}                  /* zarovnané levé hrany selectů */
     select{flex:1;min-width:0}
     input[type=date]{max-width:100%}
 
