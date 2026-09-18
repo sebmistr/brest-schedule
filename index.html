@@ -743,7 +743,7 @@ document.querySelectorAll('nav.tabs button').forEach(b=>{
 /* ---------- HERO ---------- */
 function renderHero(){
   const w=document.getElementById('heroWrap');
-  if(!myTeam){ w.innerHTML='<div class="empty"><span class="ball"></span><b>'+(league?'Vyber si svůj tým':'Vyber ligu a tým')+'</b>Nahoře v hlavičce — a uvidíš svůj rozpis zápasů týden po týdnu, laděný do barev tvého týmu.</div>'; return; }
+  if(!myTeam){ w.innerHTML='<div class="empty"><span class="ball"></span><b>'+(league?'Vyber si svůj tým':'Vyber ligu a tým')+'</b>Nahoře v hlavičce — a uvidíš svůj rozpis zápasů týden po týdnu.</div>'; return; }
   const t=T[myTeam];
   const now=today0();
   let nextHtml='';
