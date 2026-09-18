@@ -414,7 +414,6 @@
     <div class="grid" id="teamGrid"></div>
   </section>
 </main>
-<div class="foot" id="foot"></div>
 
 <script>
 /* ---------- DATA ---------- */
@@ -698,11 +697,11 @@ fillTeamSelect();
 
 /* sbalování výběru (mobil): lišta se souhrnem, po výběru týmu se sbalí */
 const pickToggle=document.getElementById('pickToggle'), pickSummary=document.getElementById('pickSummary'), bar=document.querySelector('.bar');
-const _ps=localStorage.getItem('picksOpen6liga');
-let picksOpen = _ps===null ? !myTeam : _ps==='1';   // bez uložené volby: otevřeno dokud není tým
+// při načtení: sbaleno když je vybraná liga i tým, jinak rozbaleno (týká se jen mobilu)
+let picksOpen = !(league && myTeam);
 function updatePickSummary(){ pickSummary.textContent=(league?LEAGUE_NAMES[league]:'—')+' · '+(myTeam&&T[myTeam]?T[myTeam].name:'vyber tým'); }
 function applyPicks(){ bar.classList.toggle('picks-open',picksOpen); pickToggle.setAttribute('aria-expanded',picksOpen?'true':'false'); updatePickSummary(); }
-function setPicksOpen(v){ picksOpen=v; localStorage.setItem('picksOpen6liga',v?'1':'0'); applyPicks(); }
+function setPicksOpen(v){ picksOpen=v; applyPicks(); }
 pickToggle.onclick=()=>setPicksOpen(!picksOpen);
 applyPicks();
 
@@ -908,9 +907,7 @@ function renderTeams(){
 }
 
 document.getElementById('genderLegend').innerHTML=`${sexIco('M')} muž &nbsp; ${sexIco('Z')} žena &nbsp;·&nbsp; bilance <b class="w">V</b>–<b class="l">P</b>: letos <span style="opacity:.7">(loni)</span>`;
-function renderAll(){applyTeamColor();renderHero();renderTimeline();renderDraw();renderTeams();renderFoot();}
-function renderFoot(){document.getElementById('foot').innerHTML='Aktuální data: '+(CURRENT&&CURRENT.updated?CURRENT.updated:'—')+'<br>Soupisky a tabulky: pinec.info · rozlosování a čísla týmů: brestpin.cz · Za STK: Ing. Anna Babjaková · 604 509 449 · ab2007ab@gmail.com';}
-renderFoot();
+function renderAll(){applyTeamColor();renderHero();renderTimeline();renderDraw();renderTeams();}
 renderAll();
 </script>
 </body>
