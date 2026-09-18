@@ -660,8 +660,12 @@ function rebuildEditable(wrap){
 }
 
 /* ---------- STATE ---------- */
-let myTeam = Number(localStorage.getItem('myTeam6liga'))||0;
+let myTeam = 0;   // nastaví se podle vybrané ligy z mapy níže
 let refDate = today0();
+/* zapamatování vybraného týmu zvlášť pro každou ligu */
+function _teamMap(){ try{ return JSON.parse(localStorage.getItem('teamByLeague6liga'))||{}; }catch(e){ return {}; } }
+function teamForLeague(lg){ return Number(_teamMap()[lg])||0; }
+function rememberTeam(lg,tm){ const m=_teamMap(); if(tm) m[lg]=tm; else delete m[lg]; localStorage.setItem('teamByLeague6liga', JSON.stringify(m)); }
 function playedKey(round){return 'played6liga_'+myTeam+'_'+round;}
 function isPlayed(round){return myTeam && localStorage.getItem(playedKey(round))==='1';}
 function togglePlayed(round,cb){
@@ -682,6 +686,12 @@ function fillTeamSelect(){
 // bez uložené volby defaultně 6. liga (vracející se návštěvníci uvidí to co dřív)
 league=Number(localStorage.getItem('league6liga'))||6;
 if(league && LEAGUE_TEAMS[league]) attachLeague(league); else league=0;
+// migrace: stará jediná uložená hodnota -> mapa podle ligy
+if(localStorage.getItem('teamByLeague6liga')===null){
+  const oldT=Number(localStorage.getItem('myTeam6liga'))||0;
+  if(oldT && league) rememberTeam(league, oldT);
+}
+myTeam = league ? teamForLeague(league) : 0;
 if(!league || !T[myTeam]) myTeam=0;
 leagueSel.value=league||'';
 fillTeamSelect();
@@ -700,12 +710,13 @@ leagueSel.onchange=()=>{
   league=Number(leagueSel.value)||0;
   localStorage.setItem('league6liga',league||'');
   if(league) attachLeague(league); else { TEAMS=[]; T={}; }
-  myTeam=0; localStorage.setItem('myTeam6liga','');
+  myTeam = league ? teamForLeague(league) : 0;   // obnovit zapamatovaný tým pro tuto ligu
+  if(!T[myTeam]) myTeam=0;
   fillTeamSelect(); renderAll();
-  setPicksOpen(true);          // po změně ligy zůstat otevřené (je potřeba vybrat tým)
+  setPicksOpen(!myTeam);       // zapamatovaný tým -> sbalit; jinak otevřít pro výběr
 };
 sel.onchange=()=>{
-  myTeam=Number(sel.value)||0; localStorage.setItem('myTeam6liga',myTeam); renderAll();
+  myTeam=Number(sel.value)||0; rememberTeam(league, myTeam); renderAll();
   if(myTeam) setPicksOpen(false); else applyPicks();   // po výběru týmu sbalit
 };
 const refInp=document.getElementById('refDate');
