@@ -1,0 +1,5 @@
+# dočasné artefakty z lokálního běhu scriptů (scraper / enrich)
+__pycache__/
+*.pyc
+scripts/cj.txt
+scripts/*.pdf
