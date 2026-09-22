@@ -47,18 +47,7 @@ L6_ALIASES = [
     ('SKP Kometa C', 9),
     ('Hravsonauti A', 10),
 ]
-L6_ROSTER = {
-    1: ['Smejkal Petr', 'Vlach Vlastimil', 'Vlach Radim'],
-    2: ['Musil Josef', 'Kročil František', 'Novoměstský Zdeněk', 'Lapúník Michal', 'Chytil Jakub'],
-    3: ['Hloušek Roman', 'Holubko Michal', 'Dufka Milan', 'Kadlic Šimon'],
-    4: ['Tichý Roman', 'Pišl Milan', 'Klein Michal', 'Šutera Ondřej', 'Mahrík Martin'],
-    5: ['Kružík Bořivoj', 'Blažek Miloš', 'Dorúšek Petr', 'Daniel Otakar', 'Hrúza Petr', 'Uhlíř Petr'],
-    6: ['Crhán Jiří', 'Drlík Václav', 'Kovács Peter', 'Šustr Josef'],
-    7: ['Matoušek Jan', 'Novák Boris', 'Irein Martin', 'Šlemr Václav'],
-    8: ['Hanák Vladimír', 'Pavliš Drahoslav', 'Pavliš Oldřich', 'Jonášek Martin', 'Machálek Lubomír'],
-    9: ['Mrázek Miloš', 'Sobota Tomáš', 'Novosad Květoslav', 'Nešpor Bohumil', 'Bednář Martin'],
-    10: ['Buriánek Michal', 'Šimků Sebastian', 'Suchánek Lukáš', 'Rajčan Michal'],
-}
+# soupiska ligy 6 se čte z bloku ROSTERS v index.html (viz build_maps)
 
 def build_maps():
     """Z index.html sestaví per-ligu: aliasy názvů týmů, soupisky a kanonické názvy."""
@@ -73,9 +62,12 @@ def build_maps():
             nm[t['n']] = t['name']
             rn[t['n']] = {norm(p[0]): p[0] for p in (t.get('roster') or [])}
         team_alias[lg], roster[lg], names[lg] = ta, rn, nm
-    # liga 6 (ruční)
+    # liga 6: aliasy ruční, soupisky z bloku ROSTERS
     team_alias["6"] = {norm(a): n for a, n in L6_ALIASES}
-    roster["6"] = {n: {norm(x): x for x in ns} for n, ns in L6_ROSTER.items()}
+    rblock = re.search(r'const ROSTERS = \{(.*?)\n\};', html, re.S).group(1) + '\n'
+    l6roster = {int(mm.group(1)): re.findall(r"\['([^']+)'", mm.group(2))
+                for mm in re.finditer(r'(\d+):\[(.*?)\],?\n', rblock)}
+    roster["6"] = {n: {norm(x): x for x in ns} for n, ns in l6roster.items()}
     names["6"] = {}  # pro 6 spoléháme na aliasy, ne na fuzzy
     return team_alias, roster, names
 
