@@ -120,6 +120,84 @@ def fetch_html(kind, soutez):
     page = sh(f'curl -s -m 60 -A "Mozilla/5.0" "https://www.pinec.info/htm/{kind}/?soutez={soutez}"').stdout
     return page if page and 'kolo stupně' in page else None
 
+def fetch_standings_html(soutez):
+    """Průběžná tabulka z AJAX endpointu — na rozdíl od PDF má u všech řádků
+    utkání, skóre i body. stupen = id stupně z obalové stránky (<div id="_tableN">),
+    kolo=18 vrací kumulativní stav po posledním kole."""
+    page = sh(f'curl -s -m 40 -A "Mozilla/5.0" "https://www.pinec.info/htm/tabulka/?soutez={soutez}"').stdout or ''
+    m = re.search(r'<div id="_table(\d+)"', page)
+    if not m:
+        return None
+    h = sh(f'curl -s -m 40 -A "Mozilla/5.0" '
+           f'"https://www.pinec.info/htm/tabulka/_table.php?soutez={soutez}&stupen={m.group(1)}&kolo=18&order="').stdout
+    return h if h and 'muzstvo=' in h else None
+
+# řádek HTML tabulky: poz., (ikona), tým, U, V, R, P, skóre, body
+STROW = re.compile(
+    r'<td class="c">(\d+)\.</td>.*?muzstvo=\d+">([^<]+)</a></td>'
+    r'<td class="c">(\d+)</td><td class="c">(\d+)</td><td class="c">(\d+)</td>'
+    r'<td class="c">(\d+)</td><td class="c">(\d+):(\d+)</td><td class="c b">(\d+)</td>', re.S)
+
+def parse_standings_html(h, aliases, names):
+    teams = {}
+    alist = sorted(aliases.keys(), key=len, reverse=True)
+    for pos, team, U, V, R, P, s1, s2, B in STROW.findall(h):
+        tn = match_team(norm(team), aliases, alist, names)
+        if tn:
+            teams[str(tn)] = {"pos": int(pos), "u": int(U), "w": int(V), "d": int(R), "l": int(P),
+                              "sc": [int(s1), int(s2)], "pts": int(B)}
+    return teams
+
+def fetch_zapis_detail(soutez, z):
+    """Detail zápisu utkání (jednotlivé zápasy hráčů, sety, součty) z AJAX endpointu.
+    Vrací kompaktní dict {v, d, t, ts, g, tot}, nebo None při chybě.
+    g = [[hráči domácích], [hráči hostů], [sety ±míčky poraženého], [sety d, sety h]]
+    tot = [[míčky], [sety], [body]]; ts = 'YYYY-MM-DD HH:MM' posledního zadání výsledku."""
+    h = sh(f'curl -s -m 40 -A "Mozilla/5.0" '
+           f'"https://www.pinec.info/htm/rozpis/zapis/_table.php?r={z}&soutez={soutez}"').stdout
+    if not h or 'Jednotlivé výsledky' not in h:
+        return None
+    det = {}
+    m = re.search(r'Přesná adresa:</td><td[^>]*>([^<]*)<', h)
+    det['v'] = m.group(1).strip() if m else ''
+    m = re.search(r'Datum a čas:</td><td[^>]*>(.*?)</td>', h, re.S)
+    dt = re.sub(r'<[^>]+>|&nbsp;', ' ', m.group(1)) if m else ''
+    dm = re.search(r'(\d{2}\.\d{2}\.\d{4})', dt)
+    tm = re.search(r'(\d{1,2}:\d{2})', dt)
+    det['d'] = dm.group(1) if dm else ''
+    det['t'] = tm.group(1) if tm else ''
+    games = []
+    for row in re.findall(r'<tr[^>]*>(.*?)</tr>', h, re.S):
+        if 'class="hrac"' not in row and 'class="ctyrhra"' not in row:
+            continue
+        tds = re.findall(r'<td[^>]*>(.*?)</td>', row, re.S)
+        if len(tds) < 6:
+            continue
+        def links(cell):
+            return [x.strip() for x in re.findall(r'class="(?:hrac|ctyrhra)">([^<]+)</a>', cell)]
+        home, away = links(tds[1]), links(tds[3])
+        sets = []
+        for cell in tds[4:]:
+            if 'class="red"' in cell or 'class="green"' in cell:
+                mv = re.search(r'>(-?\d+)<', cell)
+                if mv:
+                    sets.append(int(mv.group(1)))
+        msc = None
+        for cell in tds:
+            mm2 = re.match(r'\s*(\d+)\s*:\s*(\d+)\s*$', re.sub(r'<[^>]+>', '', cell))
+            if mm2:
+                msc = [int(mm2.group(1)), int(mm2.group(2))]
+        games.append([home, away, sets, msc])
+    det['g'] = games
+    m = re.search(r'Výsledek utkání:.*?(\d+)\s*:\s*(\d+).*?(\d+)\s*:\s*(\d+).*?(\d+)\s*:\s*(\d+)', h, re.S)
+    if m:
+        n = [int(x) for x in m.groups()]
+        det['tot'] = [[n[0], n[1]], [n[2], n[3]], [n[4], n[5]]]
+    m = re.search(r'Poslední změna:[^<]*?(\d{2})\.(\d{2})\.(\d{4})\s+(\d{1,2}):(\d{2})', h)
+    if m:
+        det['ts'] = f"{m.group(3)}-{m.group(2)}-{m.group(1)} {int(m.group(4)):02d}:{m.group(5)}"
+    return det
+
 def parse_tabulka(text, aliases, roster, names):
     teams, players = {}, {}
     alist = sorted(aliases.keys(), key=len, reverse=True)
@@ -172,13 +250,37 @@ def parse_results_html(page, aliases, names):
         se = re.search(r'</a>\s*(\d+)\s*:\s*(\d+)', rc.group(1))
         if not sc or not se:
             continue  # zatím neodehráno
+        zm = re.search(r'zapis=(\d+)', rc.group(1))
         home = match_team(norm(teams[0]), aliases, alist, names)
         away = match_team(norm(teams[1]), aliases, alist, names)
         if home and away:
-            results.setdefault(str(rnd), {})[str(home)] = {
-                "a": away, "sc": [int(sc.group(1)), int(sc.group(2))],
-                "se": [int(se.group(1)), int(se.group(2))]}
+            e = {"a": away, "sc": [int(sc.group(1)), int(sc.group(2))],
+                 "se": [int(se.group(1)), int(se.group(2))]}
+            if zm:
+                e["z"] = int(zm.group(1))
+            results.setdefault(str(rnd), {})[str(home)] = e
     return results
+
+def collect_details(soutez, results, old_details):
+    """Detaily zápisů pro všechny výsledky: nový/změněný výsledek se stáhne,
+    beze změny se převezme z posledních dat (šetří requesty na pinec)."""
+    details = {}
+    for rnd in results or {}:
+        for home, e in results[rnd].items():
+            z = e.get("z")
+            if not z:
+                continue
+            zs = str(z)
+            od = old_details.get(zs)
+            if od and od.get("tot") and od["tot"][2] == e["sc"]:
+                details[zs] = od
+                continue
+            d = fetch_zapis_detail(soutez, z)
+            if d:
+                details[zs] = d
+            elif od:
+                details[zs] = od
+    return details
 
 def now_str():
     try:
@@ -192,21 +294,26 @@ BLOCK = re.compile(
     r'(/\* ===== AUTO:CURRENT:START.*?===== \*/\s*\nconst CURRENT_ALL = )(.*?)(;\s*\n/\* ===== AUTO:CURRENT:END ===== \*/)',
     re.S)
 
-def scrape_league(lg, team_alias, roster, names):
-    """Vrátí dict {teams, players, results} pro ligu, nebo None při nedostupnosti."""
+def scrape_league(lg, team_alias, roster, names, old):
+    """Vrátí dict {teams, players, results, details} pro ligu, nebo None při nedostupnosti."""
     aliases, rn, nm = team_alias[lg], roster[lg], names[lg]
     text = fetch_pdf("tabulka", SOUTEZ[lg])
     if text is None:
         return None
-    teams, players = parse_tabulka(text, aliases, rn, nm)
+    _pdfteams, players = parse_tabulka(text, aliases, rn, nm)
+    # tabulka z HTML (má plné sloupce); při nedostupnosti fallback na PDF parse
+    sthtml = fetch_standings_html(SOUTEZ[lg])
+    teams = parse_standings_html(sthtml, aliases, nm) if sthtml else _pdfteams
     if len(teams) == 0:
         print(f"  0 týmů — ligu {lg} přeskakuji (chráním poslední data).")
         return None
     rhtml = fetch_html("rozpis", SOUTEZ[lg])
     results = parse_results_html(rhtml, aliases, nm) if rhtml is not None else None
+    details = collect_details(SOUTEZ[lg], results, old.get("details", {})) if results is not None else None
     print(f"  liga {lg}: {len(teams)} týmů, {sum(len(v) for v in players.values())} hráčů, "
-          f"{'—' if results is None else sum(len(v) for v in results.values())} zápasů")
-    return {"teams": teams, "players": players, "results": results}
+          f"{'—' if results is None else sum(len(v) for v in results.values())} zápasů, "
+          f"{'—' if details is None else len(details)} detailů")
+    return {"teams": teams, "players": players, "results": results, "details": details}
 
 def main():
     team_alias, roster, names = build_maps()
@@ -225,16 +332,18 @@ def main():
     changed = False
     for lg in SOUTEZ:
         print(f"--- {lg}. liga (soutěž {SOUTEZ[lg]}) ---")
-        scraped = scrape_league(lg, team_alias, roster, names)
+        old = old_all.get(lg, {})
+        scraped = scrape_league(lg, team_alias, roster, names, old)
         if scraped is None:
             continue  # ponech stará data pro tuto ligu
-        old = old_all.get(lg, {})
-        # výsledky: při chybě stažení rozpisu ponech staré
+        # výsledky: při chybě stažení rozpisu ponech staré (včetně detailů)
         if scraped["results"] is None:
             scraped["results"] = old.get("results", {})
+            scraped["details"] = old.get("details", {})
         same = (old.get("teams") == scraped["teams"]
                 and old.get("players") == scraped["players"]
-                and old.get("results") == scraped["results"])
+                and old.get("results") == scraped["results"]
+                and old.get("details") == scraped["details"])
         if same:
             print(f"  liga {lg}: beze změny.")
             continue
@@ -256,6 +365,7 @@ def main():
             "teams": {k: d["teams"][k] for k in sorted(d.get("teams", {}), key=int)},
             "players": d.get("players", {}),
             "results": d.get("results", {}),
+            "details": d.get("details") or {},
         }
         ordered[lg] = d
 

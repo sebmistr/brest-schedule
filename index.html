@@ -231,6 +231,43 @@
   .legend{padding:12px 14px;font-size:12px;color:var(--muted);line-height:2.1}
   .pill{display:inline-block;font-size:11px;font-weight:800;color:color-mix(in srgb,var(--pc,var(--muted)) var(--tp),#000);background:var(--surf2);border:1px solid var(--line);border-radius:7px;padding:1px 7px;margin-right:5px}
 
+  /* ---------- VÝSLEDKY (karty zápasů) ---------- */
+  .rescard{position:relative;border:1px solid var(--line);border-radius:16px;background:var(--surf);padding:14px 17px 18px;margin-bottom:12px;cursor:pointer;transition:transform .15s ease,box-shadow .2s ease,border-color .2s ease}
+  .rescard:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.28);border-color:color-mix(in srgb,var(--team) 45%,var(--line))}
+  .rescard::after{content:"";position:absolute;left:50%;transform:translateX(-50%);bottom:6px;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--muted);opacity:.5;transition:transform .15s}
+  .rescard.expanded::after{transform:translateX(-50%) rotate(180deg)}
+  .res-meta{display:flex;gap:7px;flex-wrap:wrap;align-items:baseline;font-size:12px;color:var(--muted)}
+  .res-meta b{color:var(--ink)}
+  .res-main{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin-top:9px}
+  .res-team{font-weight:800;font-size:16.5px;letter-spacing:-.01em;line-height:1.2;min-width:0}
+  .res-team.h{text-align:right}
+  .res-team .tnum{font-size:10.5px;font-weight:700;color:var(--muted);display:block}
+  .res-score{text-align:center;white-space:nowrap}
+  .res-score .sc{font-size:23px;font-weight:900;letter-spacing:-.02em}
+  .res-score .sc .cln{color:var(--muted);font-weight:700;margin:0 2px}
+  .res-score .sc .win{color:color-mix(in srgb,var(--win) var(--tp),#000)}
+  .res-score .sc .loss{color:color-mix(in srgb,var(--loss) var(--tp),#000)}
+  .res-score small{display:block;font-size:10.5px;font-weight:700;color:var(--muted);margin-top:1px}
+  .res-detail{display:none;margin-top:13px;border-top:1px solid var(--line);padding-top:4px}
+  .rescard.expanded .res-detail{display:block}
+  /* jednotlivé zápasy hráčů (i v kartě na časové ose) */
+  .game{display:grid;grid-template-columns:22px 1fr auto 1fr;gap:9px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13px}
+  .game:last-of-type{border-bottom:none}
+  .game .gn{color:var(--muted);font-size:11px;font-weight:700}
+  .game .gp{min-width:0;line-height:1.3}
+  .game .gp.h{text-align:right}
+  .game .gp .gd{display:block}
+  .game .gwin{font-weight:800;color:color-mix(in srgb,var(--win) var(--tp),#000)}
+  .gmid{display:flex;flex-direction:column;align-items:center;min-width:92px}
+  .gsets{font-size:10.5px;color:var(--muted);font-family:var(--mono);white-space:nowrap}
+  .gsc{font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}
+  .gsc .cln{color:var(--muted);font-weight:700;margin:0 1px}
+  .gtot{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;padding-top:11px;font-size:12.5px;color:var(--muted)}
+  .gtot b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .matchdetail{margin-top:12px;padding-top:4px;border-top:1px solid var(--line)}
+  .matchdetail .md-lbl{margin:7px 0 2px}
+  @media screen{.mcard.played:not(.expanded) .matchdetail{display:none}}
+
   /* ---------- TEAM CARDS ---------- */
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
   .tcard{position:relative;overflow:hidden;background:var(--surf);border:1px solid var(--line);border-left:4px solid var(--tc);border-radius:16px;padding:18px;transition:transform .15s ease,box-shadow .2s ease}
@@ -354,6 +391,14 @@
     .today-marker .tl-date{writing-mode:horizontal-tb;transform:none;padding:0;order:2;margin-left:auto;font-size:11.5px;font-weight:700}
     .today-marker .tl-date::before{content:""}
     .mcard{padding-left:15px}
+    /* výsledky: menší písmo, užší mezery */
+    .res-main{gap:9px}
+    .res-team{font-size:14px}
+    .res-score .sc{font-size:19px}
+    .game{grid-template-columns:16px 1fr auto 1fr;gap:6px;font-size:12px}
+    .gmid{min-width:70px}
+    .gsets{font-size:9.5px}
+    .gtot{gap:12px;font-size:11.5px}
     .ghost{font-size:54px;top:-8px;right:8px}
     .opp{font-size:18px}
     .mc-team{gap:9px;margin:11px 0}
@@ -382,6 +427,8 @@
   <nav class="tabs">
     <button data-tab="me" class="on">Můj tým</button>
     <button data-tab="draw">Rozlosování</button>
+    <button data-tab="standings">Tabulka</button>
+    <button data-tab="results">Výsledky</button>
     <button data-tab="teams">Družstva</button>
   </nav>
 </header>
@@ -404,6 +451,18 @@
     <h1>Rozlosování — celá sezóna</h1>
     <p class="note">Ve dvojici je <b>první tým domácí</b>, druhý hostující. Kola 10.–18. jsou odvety (prohozené domácí prostředí). Tvůj tým je zvýrazněný.</p>
     <div class="tblwrap" id="drawTbl"></div>
+  </section>
+
+  <section id="standings">
+    <h1>Průběžná tabulka</h1>
+    <p class="note" id="standNote"></p>
+    <div class="tblwrap" id="standTbl"></div>
+  </section>
+
+  <section id="results">
+    <h1>Odehrané zápasy</h1>
+    <p class="note">Řazeno podle zadání výsledku (nejnovější nahoře). Kliknutím na kartu rozbalíš jednotlivé zápasy hráčů.</p>
+    <div id="resList"></div>
   </section>
 
   <section id="teams">
@@ -478,7 +537,7 @@ const LEAGUES_LIST = [1,2,3,4,5,6,7,8];
 const LEAGUE_NAMES = {1:'1. liga',2:'2. liga',3:'3. liga',4:'4. liga',5:'5. liga',6:'6. liga',7:'7. liga',8:'8. liga'};
 
 /* ===== AUTO:CURRENT:START — přepisuje GitHub Action (scripts/update_current.py). Klíč = číslo ligy. ===== */
-const CURRENT_ALL = {"1": {"updated": "18. 9. 2026 14:27", "teams": {"4": {"pos": 2, "w": 0, "d": 0, "l": 1}, "5": {"pos": 1, "w": 1, "d": 0, "l": 0}}, "players": {"5": {"Madron Stanislav": [3, 0], "Schmidt Milan": [3, 0], "Bílek Jan": [3, 0]}, "4": {"Dohnálek Radim": [0, 3], "Hořelka Martin": [0, 3], "Plšek Zdeněk": [0, 3]}}, "results": {"1": {"5": {"a": 4, "sc": [10, 0], "se": [30, 9]}}}}, "6": {"updated": "22. 9. 2026 12:42", "teams": {"1": {"pos": 2, "w": 1, "d": 0, "l": 0}, "4": {"pos": 1, "w": 1, "d": 0, "l": 0}, "5": {"pos": 4, "w": 0, "d": 0, "l": 1}, "8": {"pos": 3, "w": 0, "d": 0, "l": 1}}, "players": {"4": {"Kellnerová Hana": [3, 0], "Hošková Romana": [3, 0], "Klein Michal": [3, 0]}, "1": {"Smejkal Petr": [2, 1], "Vlach Vlastimil": [2, 1], "Vlach Radim": [1, 2]}, "8": {"Jonášek Martin": [2, 1], "Pavliš Drahoslav": [1, 2], "Pavliš Oldřich": [1, 2]}, "5": {"Hrúza Petr": [0, 3], "Daniel Otakar": [0, 3], "Uhlíř Petr": [0, 3]}}, "results": {"1": {"5": {"a": 4, "sc": [0, 10], "se": [2, 30]}, "8": {"a": 1, "sc": [4, 6], "se": [17, 21]}}}}, "7": {"updated": "22. 9. 2026 09:32", "teams": {"3": {"pos": 2, "w": 0, "d": 1, "l": 0}, "6": {"pos": 1, "w": 0, "d": 1, "l": 0}}, "players": {"6": {"Kvarda Lubomír": [3, 0], "Mikulášek Libor": [1, 2], "Kotas Radek": [0, 3]}, "3": {"Procházka Jakub": [2, 1], "Pokorný Martin": [2, 1], "Zatloukal Artur": [1, 2]}}, "results": {"1": {"6": {"a": 3, "sc": [5, 5], "se": [17, 17]}}}}, "8": {"updated": "22. 9. 2026 12:42", "teams": {"1": {"pos": 2, "w": 0, "d": 0, "l": 1}, "3": {"pos": 1, "w": 1, "d": 0, "l": 0}}, "players": {"3": {"Kolář Radomír": [3, 0], "Unger Viktor": [2, 1], "Meluzínová Věra": [1, 2]}, "1": {"Straková Dana": [2, 1], "Janovský Jiří": [1, 1], "Huráb Ivan": [0, 1], "Vrba Jan": [0, 3]}}, "results": {"1": {"1": {"a": 3, "sc": [3, 7], "se": [18, 23]}}}}};
+const CURRENT_ALL = {"1": {"updated": "22. 9. 2026 14:58", "teams": {"4": {"pos": 2, "u": 1, "w": 0, "d": 0, "l": 1, "sc": [0, 10], "pts": 1}, "5": {"pos": 1, "u": 1, "w": 1, "d": 0, "l": 0, "sc": [10, 0], "pts": 4}}, "players": {"5": {"Madron Stanislav": [3, 0], "Schmidt Milan": [3, 0], "Bílek Jan": [3, 0]}, "4": {"Dohnálek Radim": [0, 3], "Hořelka Martin": [0, 3], "Plšek Zdeněk": [0, 3]}}, "results": {"1": {"5": {"a": 4, "sc": [10, 0], "se": [30, 9], "z": 1075}}}, "details": {"1075": {"v": "Svratecká 11, Sokolovna Komín, po 15:20", "d": "24.09.2026", "t": "15:30", "g": [[["Schmidt Milan"], ["Hořelka Martin"], [8, 8, -6, -11, 9], [3, 2]], [["Madron Stanislav"], ["Plšek Zdeněk"], [5, 8, -2, 4], [3, 1]], [["Bílek Jan"], ["Dohnálek Radim"], [9, -9, 8, -10, 12], [3, 2]], [["Madron Stanislav"], ["Hořelka Martin"], [8, 9, 8], [3, 0]], [["Schmidt Milan"], ["Dohnálek Radim"], [9, -10, 9, 8], [3, 1]], [["Bílek Jan"], ["Plšek Zdeněk"], [9, 7, -9, -8, 10], [3, 2]], [["Madron Stanislav"], ["Dohnálek Radim"], [8, 7, 7], [3, 0]], [["Bílek Jan"], ["Hořelka Martin"], [9, 8, -8, 7], [3, 1]], [["Schmidt Milan"], ["Plšek Zdeněk"], [9, 8, 7], [3, 0]], [["Schmidt Milan", "Madron Stanislav"], ["Hořelka Martin", "Plšek Zdeněk"], [6, 7, 5], [3, 0]]], "tot": [[407, 339], [30, 9], [10, 0]], "ts": "2026-09-14 21:55"}}}, "6": {"updated": "22. 9. 2026 14:58", "teams": {"1": {"pos": 2, "u": 1, "w": 1, "d": 0, "l": 0, "sc": [6, 4], "pts": 4}, "4": {"pos": 1, "u": 1, "w": 1, "d": 0, "l": 0, "sc": [10, 0], "pts": 4}, "5": {"pos": 4, "u": 1, "w": 0, "d": 0, "l": 1, "sc": [0, 10], "pts": 1}, "8": {"pos": 3, "u": 1, "w": 0, "d": 0, "l": 1, "sc": [4, 6], "pts": 1}}, "players": {"4": {"Kellnerová Hana": [3, 0], "Hošková Romana": [3, 0], "Klein Michal": [3, 0]}, "1": {"Smejkal Petr": [2, 1], "Vlach Vlastimil": [2, 1], "Vlach Radim": [1, 2]}, "8": {"Jonášek Martin": [2, 1], "Pavliš Drahoslav": [1, 2], "Pavliš Oldřich": [1, 2]}, "5": {"Hrúza Petr": [0, 3], "Daniel Otakar": [0, 3], "Uhlíř Petr": [0, 3]}}, "results": {"1": {"5": {"a": 4, "sc": [0, 10], "se": [2, 30], "z": 1525}, "8": {"a": 1, "sc": [4, 6], "se": [17, 21], "z": 1528}}}, "details": {"1525": {"v": "Komín, Svratecká 11, po 15:30", "d": "21.09.2026", "t": "15:30", "g": [[["Hrúza Petr"], ["Kellnerová Hana"], [-8, -8, -4], [0, 3]], [["Uhlíř Petr"], ["Klein Michal"], [-12, -3, -5], [0, 3]], [["Daniel Otakar"], ["Hošková Romana"], [-7, -8, -12], [0, 3]], [["Uhlíř Petr"], ["Kellnerová Hana"], [-7, -6, -8], [0, 3]], [["Hrúza Petr"], ["Hošková Romana"], [-8, 8, -5, -6], [1, 3]], [["Daniel Otakar"], ["Klein Michal"], [-6, -8, -5], [0, 3]], [["Uhlíř Petr"], ["Hošková Romana"], [-2, -1, -4], [0, 3]], [["Daniel Otakar"], ["Kellnerová Hana"], [-9, -4, -11], [0, 3]], [["Hrúza Petr"], ["Klein Michal"], [6, -6, -5, -8], [1, 3]], [["Hrúza Petr", "Uhlíř Petr"], ["Klein Michal", "Hošková Romana"], [-7, -9, -1], [0, 3]]], "tot": [[215, 352], [2, 30], [0, 10]], "ts": "2026-09-22 07:24"}, "1528": {"v": "SK Slatina, Tuřanka 1, po 15:30", "d": "21.09.2026", "t": "15:30", "g": [[["Pavliš Drahoslav"], ["Vlach Vlastimil"], [3, -8, -6, -4], [1, 3]], [["Jonášek Martin"], ["Vlach Radim"], [4, 5, 6], [3, 0]], [["Pavliš Oldřich"], ["Smejkal Petr"], [-7, -8, 6, -3], [1, 3]], [["Jonášek Martin"], ["Vlach Vlastimil"], [-9, 8, -13, -9], [1, 3]], [["Pavliš Drahoslav"], ["Smejkal Petr"], [-5, -8, 10, -7], [1, 3]], [["Pavliš Oldřich"], ["Vlach Radim"], [-10, -10, 6, -6], [1, 3]], [["Jonášek Martin"], ["Smejkal Petr"], [-8, 9, 7, -8, 7], [3, 2]], [["Pavliš Oldřich"], ["Vlach Vlastimil"], [6, -8, 8, 9], [3, 1]], [["Pavliš Drahoslav"], ["Vlach Radim"], [7, 8, 5], [3, 0]], [["Pavliš Drahoslav", "Pavliš Oldřich"], ["Vlach Radim", "Smejkal Petr"], [-5, -7, -7], [0, 3]]], "tot": [[344, 351], [17, 21], [4, 6]], "ts": "2026-09-22 09:25"}}}, "7": {"updated": "22. 9. 2026 14:58", "teams": {"3": {"pos": 2, "u": 1, "w": 0, "d": 1, "l": 0, "sc": [5, 5], "pts": 2}, "6": {"pos": 1, "u": 1, "w": 0, "d": 1, "l": 0, "sc": [5, 5], "pts": 2}}, "players": {"6": {"Kvarda Lubomír": [3, 0], "Mikulášek Libor": [1, 2], "Kotas Radek": [0, 3]}, "3": {"Procházka Jakub": [2, 1], "Pokorný Martin": [2, 1], "Zatloukal Artur": [1, 2]}}, "results": {"1": {"6": {"a": 3, "sc": [5, 5], "se": [17, 17], "z": 1616}}}, "details": {"1616": {"v": "Sokol Brno I, Kounicova 685/20, Brno, po 18:30", "d": "21.09.2026", "t": "18:30", "g": [[["Kvarda Lubomír"], ["Procházka Jakub"], [4, 6, 6], [3, 0]], [["Mikulášek Libor"], ["Zatloukal Artur"], [5, -5, 10, 6], [3, 1]], [["Kotas Radek"], ["Pokorný Martin"], [-8, -6, -8], [0, 3]], [["Mikulášek Libor"], ["Procházka Jakub"], [-9, -8, -8], [0, 3]], [["Kvarda Lubomír"], ["Pokorný Martin"], [2, 5, 7], [3, 0]], [["Kotas Radek"], ["Zatloukal Artur"], [-5, -6, 9, -6], [1, 3]], [["Mikulášek Libor"], ["Pokorný Martin"], [-5, -12, 10, -6], [1, 3]], [["Kotas Radek"], ["Procházka Jakub"], [-9, -5, -5], [0, 3]], [["Kvarda Lubomír"], ["Zatloukal Artur"], [4, 5, 10], [3, 0]], [["Kvarda Lubomír", "Mikulášek Libor"], ["Procházka Jakub", "Pokorný Martin"], [11, -9, 5, 7], [3, 1]]], "tot": [[312, 302], [17, 17], [5, 5]], "ts": "2026-09-22 06:20"}}}, "8": {"updated": "22. 9. 2026 14:58", "teams": {"1": {"pos": 2, "u": 1, "w": 0, "d": 0, "l": 1, "sc": [3, 7], "pts": 1}, "3": {"pos": 1, "u": 1, "w": 1, "d": 0, "l": 0, "sc": [7, 3], "pts": 4}}, "players": {"3": {"Kolář Radomír": [3, 0], "Unger Viktor": [2, 1], "Meluzínová Věra": [1, 2]}, "1": {"Straková Dana": [2, 1], "Janovský Jiří": [1, 1], "Huráb Ivan": [0, 1], "Vrba Jan": [0, 3]}}, "results": {"1": {"1": {"a": 3, "sc": [3, 7], "se": [18, 23], "z": 1708}}}, "details": {"1708": {"v": "Vojtova 12, po 15:30", "d": "21.09.2026", "t": "15:30", "g": [[["Straková Dana"], ["Kolář Radomír"], [-9, -7, 7, -9], [1, 3]], [["Vrba Jan"], ["Meluzínová Věra"], [-4, 5, -8, -10], [1, 3]], [["Janovský Jiří"], ["Unger Viktor"], [6, -7, 3, -4, -8], [2, 3]], [["Vrba Jan"], ["Kolář Radomír"], [-8, 5, -9, -8], [1, 3]], [["Straková Dana"], ["Unger Viktor"], [8, -2, 9, 9], [3, 1]], [["Janovský Jiří"], ["Meluzínová Věra"], [5, 6, 5], [3, 0]], [["Vrba Jan"], ["Unger Viktor"], [-6, 11, 9, -4, -6], [2, 3]], [["Huráb Ivan"], ["Kolář Radomír"], [-5, 18, -7, -6], [1, 3]], [["Straková Dana"], ["Meluzínová Věra"], [6, 5, -6, 9], [3, 1]], [["Straková Dana", "Huráb Ivan"], ["Kolář Radomír", "Unger Viktor"], [7, -8, -4, -9], [1, 3]]], "tot": [[363, 387], [18, 23], [3, 7]], "ts": "2026-09-22 10:37"}}}};
 /* ===== AUTO:CURRENT:END ===== */
 
 // aktivní liga + její týmy (přepíná se výběrem ligy)
@@ -499,10 +558,34 @@ function getResult(round, team){
   const rr = (CURRENT && CURRENT.results) ? CURRENT.results[round] : null;
   if(!rr) return null;
   for(const h in rr){ const e=rr[h], hn=+h;
-    if(hn===team) return {home:true, us:e.sc[0], them:e.sc[1], usS:e.se[0], themS:e.se[1], opp:e.a};
-    if(e.a===team) return {home:false, us:e.sc[1], them:e.sc[0], usS:e.se[1], themS:e.se[0], opp:hn};
+    if(hn===team) return {home:true, us:e.sc[0], them:e.sc[1], usS:e.se[0], themS:e.se[1], opp:e.a, z:e.z};
+    if(e.a===team) return {home:false, us:e.sc[1], them:e.sc[0], usS:e.se[1], themS:e.se[0], opp:hn, z:e.z};
   }
   return null;
+}
+// detail zápisu (jednotlivé zápasy hráčů) k výsledku, pokud je stažený
+function getDetail(z){ return z!=null ? ((CURRENT.details||{})[String(z)]||null) : null; }
+// "21.09.2026" -> "21. 9. 2026"
+function fmtCz(d){ const m=/^(\d{2})\.(\d{2})\.(\d{4})$/.exec(d||''); return m?`${+m[1]}. ${+m[2]}. ${m[3]}`:(d||''); }
+// jednotlivé zápasy hráčů + součty (formát dle zápisu na pinec.info; sety z pohledu domácích,
+// záporné číslo = domácí set prohráli, hodnota = míčky poraženého)
+function gamesHtml(det){
+  if(!det||!det.g||!det.g.length) return '';
+  const rows=det.g.map((g,i)=>{
+    const [h,a,sets,sc]=g;
+    const hw=sc&&sc[0]>sc[1], aw=sc&&sc[1]>sc[0];
+    const nm=x=>x.map(n=>`<span class="gd">${n}</span>`).join('');
+    const scH=sc?`<span class="${hw?'w':(aw?'l':'')}">${sc[0]}</span><span class="cln">:</span><span class="${aw?'w':(hw?'l':'')}">${sc[1]}</span>`:'—';
+    return `<div class="game">
+      <span class="gn">${i+1}.</span>
+      <span class="gp h ${hw?'gwin':''}">${nm(h)}</span>
+      <span class="gmid"><span class="gsets" title="sety (záporné = prohra domácích, číslo = míčky poraženého)">${sets&&sets.length?sets.join(' · '):'—'}</span><span class="gsc">${scH}</span></span>
+      <span class="gp a ${aw?'gwin':''}">${nm(a)}</span>
+    </div>`;
+  }).join('');
+  const t=det.tot;
+  const tot=t?`<div class="gtot"><span>Míčky <b>${t[0][0]} : ${t[0][1]}</b></span><span>Sety <b>${t[1][0]} : ${t[1][1]}</b></span><span>Body <b>${t[2][0]} : ${t[2][1]}</b></span></div>`:'';
+  return rows+tot;
 }
 function toggleCard(el,ev){
   if(ev){const t=ev.target; if(t.closest && t.closest('a,button,input,.editable')) return;}
@@ -841,6 +924,7 @@ function renderTimeline(){
           </div>
           <div class="roster-line">${IC.squad}<span class="rlist">${opp.roster.map(p=>`<span class="rp">${sexIco(p.sex)}${p.name}${wlHtml(p)}</span>`).join('')}</span></div>
           ${curHtml(opp)}${lastHtml(opp)}
+          ${(d=>d?`<div class="matchdetail"><div class="lab md-lbl">Jednotlivé zápasy — ${m.home?t.name:opp.name} (domácí) vs. ${m.home?opp.name:t.name}</div>${gamesHtml(d)}</div>`:'')(res?getDetail(res.z):null)}
         </div>
       </div>`;
     } else {
@@ -887,6 +971,63 @@ function renderDraw(){
     <div class="legend">${TEAMS.map(t=>`<span class="pill" style="--pc:${tc(t.n)}">${t.ab}</span>${t.n}. ${t.name}`).join('&nbsp;&nbsp; ')}</div>`;
 }
 
+/* ---------- STANDINGS (průběžná tabulka) ---------- */
+function renderStandings(){
+  const tbl=document.getElementById('standTbl'), note=document.getElementById('standNote');
+  if(!league){ note.textContent=''; tbl.innerHTML='<div class="legend" style="padding:26px;text-align:center">Vyber ligu nahoře v hlavičce.</div>'; return; }
+  const rows=Object.entries(CURRENT.teams||{}).map(([n,c])=>Object.assign({n:+n},c)).sort((a,b)=>(a.pos||99)-(b.pos||99));
+  note.innerHTML=CURRENT.updated?`Stav k poslední aktualizaci: <b>${CURRENT.updated}</b>. Týmy bez odehraného zápasu zatím nemají pořadí (stejně jako na pinec.info).`:'';
+  if(!rows.length){ tbl.innerHTML='<div class="legend" style="padding:26px;text-align:center">Sezóna v této lize ještě nezačala — tabulka se objeví po prvním odehraném zápase.</div>'; return; }
+  const played=new Set(rows.map(r=>r.n));
+  const rest=TEAMS.filter(t=>!played.has(t.n));
+  const c='style="text-align:center"';
+  const row=(r,t,ghost)=>`<tr class="${(r?r.n:t.n)===myTeam?'myrow':''}"${ghost?' style="opacity:.55"':''}>
+    <td ${c}>${r?`<b>${r.pos}.</b>`:'—'}</td>
+    <td><span style="font-weight:800;color:color-mix(in srgb,${tc(r?r.n:t.n)} var(--tp),#000)">${t?t.name:'?'}</span></td>
+    <td ${c}>${r?(r.u!=null?r.u:'—'):0}</td>
+    <td ${c} class="w">${r?r.w:0}</td><td ${c} class="d">${r?r.d:0}</td><td ${c} class="l">${r?r.l:0}</td>
+    <td ${c}>${r&&r.sc?r.sc[0]+' : '+r.sc[1]:'—'}</td>
+    <td ${c}>${r&&r.pts!=null?`<b>${r.pts}</b>`:'—'}</td></tr>`;
+  tbl.innerHTML=`<table><thead><tr><th ${c}>Poř.</th><th>Tým</th><th ${c}>Utkání</th><th ${c}>Výhry</th><th ${c}>Remízy</th><th ${c}>Prohry</th><th ${c}>Skóre</th><th ${c}>Body</th></tr></thead>
+    <tbody>${rows.map(r=>row(r,T[r.n],false)).join('')}${rest.map(t=>row(null,t,true)).join('')}</tbody></table>`;
+}
+
+/* ---------- RESULTS (odehrané zápasy) ---------- */
+function renderResults(){
+  const box=document.getElementById('resList');
+  if(!league){ box.innerHTML='<div class="empty"><b>Vyber ligu</b>Nahoře v hlavičce a uvidíš odehrané zápasy.</div>'; return; }
+  const items=[];
+  const rr=CURRENT.results||{};
+  for(const rnd in rr) for(const h in rr[rnd]){
+    const e=rr[rnd][h];
+    items.push({rnd:+rnd, home:+h, away:e.a, sc:e.sc, se:e.se, det:getDetail(e.z)});
+  }
+  if(!items.length){ box.innerHTML='<div class="empty"><span class="ball"></span><b>Zatím žádné odehrané zápasy</b>Výsledky se objeví po prvním odehraném kole.</div>'; return; }
+  items.sort((x,y)=>{
+    const tx=(x.det&&x.det.ts)||'', ty=(y.det&&y.det.ts)||'';
+    if(tx!==ty) return tx>ty?-1:1;   // nejnovější zadání výsledku první
+    return y.rnd-x.rnd;
+  });
+  box.innerHTML=items.map(it=>{
+    const th=T[it.home], ta=T[it.away];
+    if(!th||!ta) return '';
+    const hw=it.sc[0]>it.sc[1], aw=it.sc[1]>it.sc[0];
+    const d=it.det;
+    const meta=[`<b>${it.rnd}. kolo</b>`];
+    if(d&&d.d) meta.push(fmtCz(d.d)+(d.t?' · '+d.t:''));
+    if(d&&d.v) meta.push(d.v);
+    return `<div class="rescard" onclick="toggleCard(this,event)">
+      <div class="res-meta">${meta.join(' <span style="opacity:.5">·</span> ')}</div>
+      <div class="res-main">
+        <span class="res-team h"><span class="tnum">domácí</span>${th.name}</span>
+        <span class="res-score"><span class="sc"><span class="${hw?'win':(aw?'loss':'')}">${it.sc[0]}</span><span class="cln">:</span><span class="${aw?'win':(hw?'loss':'')}">${it.sc[1]}</span></span><small>sety ${it.se[0]} : ${it.se[1]}</small></span>
+        <span class="res-team a"><span class="tnum">hosté</span>${ta.name}</span>
+      </div>
+      <div class="res-detail">${d&&d.g&&d.g.length?gamesHtml(d):'<div class="gtot">Detail zápisu zatím není k dispozici.</div>'}</div>
+    </div>`;
+  }).join('');
+}
+
 /* ---------- TEAMS ---------- */
 function renderTeams(){
   if(!league){ document.getElementById('teamGrid').innerHTML='<div class="empty" style="grid-column:1/-1"><b>Vyber ligu</b>Nahoře v hlavičce a uvidíš všechna družstva v dané lize.</div>'; return; }
@@ -907,7 +1048,7 @@ function renderTeams(){
 }
 
 document.getElementById('genderLegend').innerHTML=`${sexIco('M')} muž &nbsp; ${sexIco('Z')} žena &nbsp;·&nbsp; bilance <b class="w">V</b>–<b class="l">P</b>: letos <span style="opacity:.7">(loni)</span>`;
-function renderAll(){applyTeamColor();renderHero();renderTimeline();renderDraw();renderTeams();}
+function renderAll(){applyTeamColor();renderHero();renderTimeline();renderDraw();renderStandings();renderResults();renderTeams();}
 renderAll();
 </script>
 </body>
