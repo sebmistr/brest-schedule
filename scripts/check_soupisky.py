@@ -42,7 +42,8 @@ def scrape(sz):
         roster=[]
         for _try in range(3):  # detail stránka občas timeoutne -> retry
             dt=sh(f'curl -s -m 30 -A "Mozilla/5.0" "https://www.pinec.info/htm/svaz/kluby/muzstva/detail/?muzstvoId={mid}&soutez={sz}&svaz=431706"')
-            roster=[[p.strip(), 'Z' if c in ('pink','red') else 'M'] for c,p in re.findall(r'ico-color-(\w+).*?hraci/detail/\?hracId=\d+[^>]*>([^<]+)</a>', dt, re.S)]
+            # ženy mají ikonu ico-girl (bez ico-color-*), muži ico-person ico-color-<barva>
+            roster=[[p.strip(), 'Z' if c in ('girl','color-pink','color-red') else 'M'] for c,p in re.findall(r'ico-(girl|color-\w+)[^>]*></span></td><td><a[^>]*hraci/detail/\?hracId=\d+[^>]*>([^<]+)</a>', dt)]
             if roster: break
         teams.append({'name':name,'lead':lead.group(1).strip() if lead else '',
                       'tel':fmtphone(deob(ph.group(1))) if ph else '','mail':deob(em.group(1)) if em else '',
