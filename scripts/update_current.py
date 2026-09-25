@@ -101,18 +101,25 @@ def match_team(nteam, aliases, alist, names):
     return best if bestsc >= 0.82 else None
 
 def fetch_pdf(kind, soutez):
-    """kind = 'tabulka' | 'rozpis'. Vrátí text PDF, nebo None při chybě/prázdnu."""
+    """kind = 'tabulka' | 'rozpis'. Vrátí text PDF, nebo None při chybě/prázdnu.
+    Starý soubor se maže předem — po spadlém stažení nesmí zůstat PDF jiné ligy."""
     tag = {"tabulka": "tab", "rozpis": "roz"}[kind]
+    fn = f"{tag}.pdf"
+    if os.path.exists(fn):
+        os.remove(fn)
     sh(f'curl -s -m 40 -A "Mozilla/5.0" -c cj.txt '
        f'"https://www.pinec.info/htm/{kind}/?soutez={soutez}" -o /dev/null')
     code = sh(f'curl -s -m 60 -A "Mozilla/5.0" -w "%{{http_code}}" -b cj.txt '
              f'-e "https://www.pinec.info/htm/{kind}/?soutez={soutez}" '
-             f'"https://www.pinec.info/pdf/{kind}/?soutez={soutez}&order=" -o {tag}.pdf').stdout.strip()
-    size = os.path.getsize(f"{tag}.pdf") if os.path.exists(f"{tag}.pdf") else 0
-    print(f"  {kind}: HTTP {code}, PDF {size} B")
-    if size < 1500:
+             f'"https://www.pinec.info/pdf/{kind}/?soutez={soutez}&order=" -o {fn}').stdout.strip()
+    size = os.path.getsize(fn) if os.path.exists(fn) else 0
+    if code != "200" or size < 1500:
+        print(f"  {kind}: HTTP {code}, PDF {size} B — nepoužitelné")
         return None
-    return sh(f'pdftotext -enc UTF-8 -layout {tag}.pdf -').stdout
+    text = sh(f'pdftotext -enc UTF-8 -layout {fn} -').stdout
+    lines = (text or '').lstrip().splitlines()
+    print(f"  {kind}: HTTP {code}, PDF {size} B, hlavička: {lines[0][:70] if lines else '(prázdné)'}")
+    return text
 
 def fetch_html(kind, soutez):
     """Vrátí HTML stránky (rozpis/tabulka). Rozpis HTML je spolehlivý i pro 9týmové ligy
@@ -130,7 +137,8 @@ def fetch_standings_html(soutez):
         return None
     h = sh(f'curl -s -m 40 -A "Mozilla/5.0" '
            f'"https://www.pinec.info/htm/tabulka/_table.php?soutez={soutez}&stupen={m.group(1)}&kolo=18&order="').stdout
-    return h if h and 'muzstvo=' in h else None
+    # validní je i prázdná tabulka (liga bez odehraného zápasu) — poznáme ji podle hlavičky
+    return h if h and ('muzstvo=' in h or 'Mužstvo' in h) else None
 
 # řádek HTML tabulky: poz., (ikona), tým, U, V, R, P, skóre, body
 STROW = re.compile(
@@ -298,15 +306,29 @@ def scrape_league(lg, team_alias, roster, names, old):
     """Vrátí dict {teams, players, results, details} pro ligu, nebo None při nedostupnosti."""
     aliases, rn, nm = team_alias[lg], roster[lg], names[lg]
     text = fetch_pdf("tabulka", SOUTEZ[lg])
-    if text is None:
-        return None
-    _pdfteams, players = parse_tabulka(text, aliases, rn, nm)
+    # PDF musí patřit téhle lize (hlavička) — pinec občas vrátí PDF jiné soutěže
+    # a hráči hrají ve více ligách, takže by se napárovala špatná úspěšnost
+    if text is not None and text.strip():
+        head = text.lstrip().splitlines()[0]
+        if f"{lg}. liga" not in head:
+            print(f"  liga {lg}: PDF patří jiné soutěži — úspěšnost hráčů nepoužiji.")
+            text = None
+    _pdfteams, players = parse_tabulka(text, aliases, rn, nm) if text is not None else ({}, {})
     # tabulka z HTML (má plné sloupce); při nedostupnosti fallback na PDF parse
     sthtml = fetch_standings_html(SOUTEZ[lg])
+    raw_rows = len(STROW.findall(sthtml)) if sthtml else None
     teams = parse_standings_html(sthtml, aliases, nm) if sthtml else _pdfteams
     if len(teams) == 0:
-        print(f"  0 týmů — ligu {lg} přeskakuji (chráním poslední data).")
+        if raw_rows == 0:
+            print(f"  liga {lg}: tabulka na pinci zatím prázdná (žádný odehraný zápas) — beze změny.")
+        else:
+            print(f"  liga {lg}: 0 spárovaných týmů (nedostupné / nespárované názvy) — přeskakuji, chráním poslední data.")
         return None
+    # úspěšnost hráčů se občas nestáhne (spadlé PDF) -> prázdný výsledek
+    # nesmí přepsat poslední dobrá data
+    if not any(players.values()) and old.get("players"):
+        print(f"  liga {lg}: úspěšnost hráčů se nenaparsovala — nechávám poslední data.")
+        players = old["players"]
     rhtml = fetch_html("rozpis", SOUTEZ[lg])
     results = parse_results_html(rhtml, aliases, nm) if rhtml is not None else None
     details = collect_details(SOUTEZ[lg], results, old.get("details", {})) if results is not None else None
