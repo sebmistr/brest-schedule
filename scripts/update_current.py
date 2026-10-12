@@ -156,6 +156,52 @@ def parse_standings_html(h, aliases, names):
                               "sc": [int(s1), int(s2)], "pts": int(B)}
     return teams
 
+def fetch_players_html(soutez):
+    """Úspěšnost jednotlivců z AJAX endpointu (stejný princip jako tabulka).
+    PDF se nedá spolehlivě použít: pdftotext na runneru (poppler) skládá sloupce
+    jinak než lokálně a PDF navíc zaostává za webem o kolo i víc.
+    Pinec občas vrátí prázdnou odpověď -> jeden opakovaný pokus."""
+    for _ in range(2):
+        page = sh(f'curl -s -m 40 -A "Mozilla/5.0" '
+                  f'"https://www.pinec.info/htm/zebricek/uspesnost/jednotlivci/?soutez={soutez}"').stdout or ''
+        m = re.search(r'<div id="_table(\d+)"', page)
+        if not m:
+            continue
+        h = sh(f'curl -s -m 40 -A "Mozilla/5.0" '
+               f'"https://www.pinec.info/htm/zebricek/uspesnost/jednotlivci/_table.php'
+               f'?soutez={soutez}&stupen={m.group(1)}&kolo=18&order="').stdout
+        if h and 'Úspěšnost' in h:
+            return h
+    return None
+
+# řádek úspěšnosti: poz., hráč, mužstvo, utkání, zápasy, výhry, prohry, ...
+PROW = re.compile(
+    r'<td class="c w30">\d+\.</td><td><a [^>]*hrac=\d+">([^<]+)</a></td><td>([^<]*)</td>'
+    r'<td class="c">\d+</td><td class="c">\d+</td><td class="c">(\d+)</td><td class="c">(\d+)</td>')
+
+def parse_players_html(h, aliases, roster, names):
+    """Vrátí {číslo týmu: {jméno ze soupisky: [výhry, prohry]}}. Hráč se páruje
+    v soupisce svého týmu, jinak (přestup / nespárovaný tým) kdekoli v lize."""
+    import html as _html
+    alist = sorted(aliases.keys(), key=len, reverse=True)
+    # soupisky píšou "Břenek Jiří, ml.", úspěšnost "Břenek Jiří ml." -> čárky ignorujeme
+    key = lambda s: norm(s.replace(',', ''))
+    roster = {num: {key(orig): orig for orig in d.values()} for num, d in roster.items()}
+    players = {}
+    for name, team, V, P in PROW.findall(h):
+        pn = key(_html.unescape(name))
+        tn = match_team(norm(_html.unescape(team)), aliases, alist, names)
+        hit = None
+        if tn and pn in roster.get(tn, {}):
+            hit = (tn, roster[tn][pn])
+        else:
+            for num, d in roster.items():
+                if pn in d:
+                    hit = (num, d[pn]); break
+        if hit:
+            players.setdefault(str(hit[0]), {})[hit[1]] = [int(V), int(P)]
+    return players
+
 def fetch_zapis_detail(soutez, z):
     """Detail zápisu utkání (jednotlivé zápasy hráčů, sety, součty) z AJAX endpointu.
     Vrací kompaktní dict {v, d, t, ts, g, tot}, nebo None při chybě.
@@ -314,6 +360,13 @@ def scrape_league(lg, team_alias, roster, names, old):
             print(f"  liga {lg}: PDF patří jiné soutěži — úspěšnost hráčů nepoužiji.")
             text = None
     _pdfteams, players = parse_tabulka(text, aliases, rn, nm) if text is not None else ({}, {})
+    # úspěšnost hráčů primárně z HTML (aktuálnější a nezávislá na pdftotext), PDF je fallback
+    phtml = fetch_players_html(SOUTEZ[lg])
+    hplayers = parse_players_html(phtml, aliases, rn, nm) if phtml else {}
+    if any(hplayers.values()):
+        players = hplayers
+    else:
+        print(f"  liga {lg}: úspěšnost z HTML nedostupná — zkouším PDF.")
     # tabulka z HTML (má plné sloupce); při nedostupnosti fallback na PDF parse
     sthtml = fetch_standings_html(SOUTEZ[lg])
     raw_rows = len(STROW.findall(sthtml)) if sthtml else None
