@@ -118,7 +118,8 @@ def fetch_pdf(kind, soutez):
         return None
     text = sh(f'pdftotext -enc UTF-8 -layout {fn} -').stdout
     lines = (text or '').lstrip().splitlines()
-    print(f"  {kind}: HTTP {code}, PDF {size} B, hlavička: {lines[0][:70] if lines else '(prázdné)'}")
+    head = next((l for l in lines[:5] if 'liga' in l), lines[0] if lines else '(prázdné)')
+    print(f"  {kind}: HTTP {code}, PDF {size} B, hlavička: {head.strip()[:70]}")
     return text
 
 def fetch_html(kind, soutez):
@@ -354,8 +355,9 @@ def scrape_league(lg, team_alias, roster, names, old):
     text = fetch_pdf("tabulka", SOUTEZ[lg])
     # PDF musí patřit téhle lize (hlavička) — pinec občas vrátí PDF jiné soutěže
     # a hráči hrají ve více ligách, takže by se napárovala špatná úspěšnost
+    # (poppler na runneru dává na 1. řádek čas tisku, název ligy až pod něj -> bereme pár řádků)
     if text is not None and text.strip():
-        head = text.lstrip().splitlines()[0]
+        head = ' '.join(text.lstrip().splitlines()[:5])
         if f"{lg}. liga" not in head:
             print(f"  liga {lg}: PDF patří jiné soutěži — úspěšnost hráčů nepoužiji.")
             text = None
@@ -365,8 +367,12 @@ def scrape_league(lg, team_alias, roster, names, old):
     hplayers = parse_players_html(phtml, aliases, rn, nm) if phtml else {}
     if any(hplayers.values()):
         players = hplayers
+    elif old.get("players"):
+        # PDF zaostává za webem -> radši poslední data z HTML než starší čísla z PDF
+        print(f"  liga {lg}: úspěšnost z HTML nedostupná — nechávám poslední data.")
+        players = old["players"]
     else:
-        print(f"  liga {lg}: úspěšnost z HTML nedostupná — zkouším PDF.")
+        print(f"  liga {lg}: úspěšnost z HTML nedostupná — beru PDF.")
     # tabulka z HTML (má plné sloupce); při nedostupnosti fallback na PDF parse
     sthtml = fetch_standings_html(SOUTEZ[lg])
     raw_rows = len(STROW.findall(sthtml)) if sthtml else None
