@@ -377,6 +377,11 @@ def scrape_league(lg, team_alias, roster, names, old):
     sthtml = fetch_standings_html(SOUTEZ[lg])
     raw_rows = len(STROW.findall(sthtml)) if sthtml else None
     teams = parse_standings_html(sthtml, aliases, nm) if sthtml else _pdfteams
+    # PDF fallback (pdftotext layout) umí naparsovat jen část řádků -> neúplná
+    # tabulka nesmí přepsat poslední plnou
+    if not sthtml and old.get("teams") and len(teams) < len(old["teams"]):
+        print(f"  liga {lg}: HTML tabulka nedostupná a PDF dalo jen {len(teams)}/{len(old['teams'])} týmů — chráním poslední data.")
+        return None
     if len(teams) == 0:
         if raw_rows == 0:
             print(f"  liga {lg}: tabulka na pinci zatím prázdná (žádný odehraný zápas) — beze změny.")
